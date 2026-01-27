@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home — Mode Wheel</title>
+  <meta name="description" content="Mode Wheel: an interactive instrument for exploring modes, scales, and harmonic structure." />
+  <link rel="stylesheet" href="assets/site.css?v=5" />
+  <link rel="stylesheet" href="assets/wheel.css?v=5">
+</head>
+<body>
+  <div class="page">
+    <aside class="rail stone" aria-label="Site navigation">
+      <div class="brand">
+        <a href="index.html">
+          <div class="title">Mode Wheel</div>
+          <div class="subtitle">Music Theory Portal</div>
+        </a>
+      </div>
+ <a href="index.html" class="navbtn is-current" style="--accent:var(--c-modewheel)"><span class="label">Mode Wheel</span></a>
+      <a href="about.html" class="navbtn" style="--accent:var(--c-about)"><span class="label">About</span></a>
+      <a href="theory.html" class="navbtn" style="--accent:var(--c-theory)"><span class="label">Theory</span></a>
+      <a href="harmonics.html" class="navbtn" style="--accent:var(--c-harmonics)"><span class="label">Harmonics</span></a>
+  <a href="spheres.html" class="navbtn" style="--accent:var(--c-spheres)"><span class="label">Music of the Spheres</span></a>
+      <a href="shop.html" class="navbtn" style="--accent:var(--c-shop)"><span class="label">Shop</span></a>
+      <a href="contact.html" class="navbtn" style="--accent:var(--c-contact)"><span class="label">Contact</span></a>
+    </aside>
+
+    <div class="content">
+      <header class="topbar stone mobile-header" aria-label="Mobile header">
+        <div class="mobile-header-inner">
+          <a class="brand" href="index.html" aria-label="Mode Wheel home">
+            <div class="title">Mode Wheel</div>
+            <div class="subtitle">Music Theory Portal</div>
+          </a>
+
+          <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+        </div>
+
+        <nav class="mobile-drawer" aria-label="Mobile navigation" hidden>
+        <a href="index.html" class="navbtn is-current" style="--accent:var(--c-modewheel)"><span class="label">Mode Wheel</span></a>
+        <a href="about.html" class="navbtn" style="--accent:var(--c-about)"><span class="label">About</span></a>
+        <a href="theory.html" class="navbtn" style="--accent:var(--c-theory)"><span class="label">Theory</span></a>
+        <a href="harmonics.html" class="navbtn" style="--accent:var(--c-harmonics)"><span class="label">Harmonics</span></a>
+        <a href="spheres.html" class="navbtn" style="--accent:var(--c-spheres)"><span class="label">Music of the Spheres</span></a>
+        <a href="shop.html" class="navbtn" style="--accent:var(--c-shop)"><span class="label">Shop</span></a>
+        <a href="contact.html" class="navbtn" style="--accent:var(--c-contact)"><span class="label">Contact</span></a>
+        </nav>
+      </header>
+
+      <main class="main">
+        
+<div id="wheel-stage" class="stone frame-outer" role="region" aria-label="Mode Wheel">
+  <div class="inlay">
+    
+    <div id="mw-app">
+      <div id="mw-container">
+    <svg id="wheel" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+        <div id="controls">
+          <div id="interval-controls"></div>
+          <div id="action-controls">
+            <button id="play-mode">Play Mode</button>
+            <button id="play-chords">Play Chords</button>
+            <button id="play-scale">Play Scale</button>
+          </div>
+          <div id="key-area">
+            <div id="key-rows"></div>
+          </div>
+    
+          <!-- 🎚️ Mode Family Control Panel -->
+          <div id="mode-controls">
+            <div class="control-group">
+              <div class="control-label"># of Notes</div>
+              <div class="control-row">
+                <button id="notes-minus">−</button>
+                <span id="notes-display">7</span>
+                <button id="notes-plus">+</button>
+              </div>
+            </div>
+    
+            <div class="control-group">
+              <div class="control-label">Mode Family</div>
+              <div class="control-row">
+                <button id="family-prev">◀</button>
+                <span id="family-display">Diatonic</span>
+                <button id="family-next">▶</button>
+              </div>
+            </div>
+    
+            <div class="control-group">
+              <div class="control-label">Index</div>
+              <input type="text" id="index-input" placeholder="7.1.1" maxlength="6">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+      </main>
+
+      <footer class="footer">
+        © 2026 Jake Masterson. All rights reserved.
+      </footer>
+    </div>
+  </div>
+  <script src="assets/wheel.js?v=5"></script>
+  <script src="assets/mobile-nav.js?v=5"></script>
+</body>
+</html>

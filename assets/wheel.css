@@ -1,0 +1,532 @@
+#mw-app {
+  --bg: #030306;
+  --stone1: #3a3b3d;
+  --stone2: #222325;
+  --ivory: #ffffff;
+  --glow: #cfe6ff;
+}
+
+#mw-app, #mw-app * { box-sizing: border-box; }
+
+#mw-app {
+  min-height: auto;
+  display: block;
+  padding: 0;
+}
+
+#mw-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 980px;
+}
+
+/* --- WHEEL SIZE & LAYOUT --- */
+svg#wheel {
+  width: 80vmin;
+  max-width: 720px;
+  height: 80vmin;
+  max-height: 720px;
+  display: block;
+  user-select: none;
+  touch-action: none;
+}
+
+@media (max-width: 768px) {
+  svg#wheel {
+    width: 95vw;
+    height: 95vw;
+    max-width: none;
+    max-height: none;
+  }
+}
+
+/* --- Wheel Elements --- */
+.stone-ring {
+  fill: url(#stoneGrad);
+  stroke: #171717;
+  stroke-width: 3;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.7));
+}
+
+.note-circle {
+  fill: #1b1b1c;
+  stroke: #444;
+  stroke-width: 3;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+}
+
+.note-label {
+  fill: #ffffff;
+  font-family: 'Cardo', serif;
+  pointer-events: none;
+}
+
+/* --- Color spokes --- */
+.spoke {
+  stroke-width: 6;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.spoke.on { opacity: 1; }
+
+.center {
+  fill: #111;
+  stroke: #3b3b3b;
+  stroke-width: 3;
+}
+
+/* --- Interval Ring --- */
+.interval-wedge {
+  fill: #2a2a2a;
+  stroke: #111;
+  stroke-width: 1.5px;
+  cursor: pointer;
+  transition: fill 0.25s ease, filter 0.3s ease, stroke 0.25s ease;
+}
+.interval-wedge:hover { filter: brightness(1.3); }
+.interval-wedge.active {
+  fill: #ffffff55;
+  stroke: #eee;
+  filter: drop-shadow(0 0 12px #fff);
+}
+.interval-label {
+  fill: #ffffff;
+  font-family: 'Cardo', serif;
+  font-size: 15px;
+  pointer-events: none;
+}
+
+/* --- Control Areas --- */
+#controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#interval-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.interval-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: linear-gradient(#2b2b2d, #1c1c1d);
+  border: 1px solid #222;
+  color: #ffffff;
+  cursor: pointer;
+}
+.interval-btn.active {
+  box-shadow: inset 0 2px 8px rgba(153, 170, 255, 0.06);
+  color: var(--glow);
+  border-color: rgba(153, 170, 255, 0.12);
+}
+
+/* Hide playback buttons */
+#action-controls { display: none; }
+
+/* --- Mode Tiles --- */
+#key-area {
+  width: 100%;
+  max-width: 880px;
+  overflow: visible;
+}
+#key-rows {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 880px;
+  margin-top: 4px;
+  padding: 0;
+}
+
+.mode-tile {
+  position: relative;
+  flex: 1 1 110px;
+  max-width: 100px;
+  min-width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  border-radius: 4px;
+  overflow: visible;
+  box-sizing: border-box;
+  background: radial-gradient(
+    circle at center,
+    var(--tile-color) 0%,
+    var(--tile-color) 40%,
+    #0d0d0d 130%
+  ) !important;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.15),
+              inset 0 0 12px rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.15s ease, filter 0.3s ease;
+  gap: 2px; /* replaces vertical margins */
+  padding: 2px 0; /* minimal visual border inside */
+}
+
+.mode-tile:hover {
+  transform: scale(1.04);
+  filter: brightness(1.25);
+}
+
+.mode-tile .key-btn {
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-family: 'Cardo', serif;
+  font-size: clamp(13px, 1.2vw, 16px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0; /* 🔹 remove gaps causing fat color stripes */
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.mode-tile .key-btn:hover {
+  background-color: rgba(25, 25, 25, 0.85);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+.mode-tile .key-btn.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+/* ===== DESKTOP RESTORE ===== */
+@media (min-width: 769px) {
+  #key-rows {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .mode-tile {
+    flex: 1 1 110px;
+    max-width: 100px;
+    min-width: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    border-radius: 4px;
+    overflow: visible;
+    box-sizing: border-box;
+    background: radial-gradient(
+      circle at center,
+      var(--tile-color) 0%,
+      var(--tile-color) 40%,
+      #0d0d0d 130%
+    ) !important;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.15),
+                inset 0 0 12px rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.15s ease, filter 0.3s ease;
+  }
+
+  .mode-tile:hover {
+    transform: scale(1.04);
+    filter: brightness(1.25);
+  }
+
+  /* restore the colored band between roman & name */
+  .mode-tile .key-btn {
+    margin: 2px 0;                /* colored band returns */
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 5px 8px;
+    font-family: 'Cardo', serif;
+    font-size: clamp(13px, 1.2vw, 16px);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 0 2px rgba(255, 255, 255, 0.15);
+  }
+
+  .mode-tile .key-btn:hover {
+    background-color: rgba(25, 25, 25, 0.85);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.25);
+  }
+
+  .mode-tile .key-btn.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ===== MOBILE: 7 tiles centered, desktop look preserved ===== */
+@media (max-width: 768px) {
+  /* Pick a tile width that fits 7 across on small phones (SE width ~375px) */
+  #key-rows {
+    display: grid;
+    grid-template-columns: repeat(7, 13.5vw);  /* ~50–52px per tile on small screens */
+    column-gap: 3px;
+    row-gap: 1px;
+
+    /* Center the whole grid */
+    justify-content: center;   /* centers the columns block */
+    justify-items: stretch;    /* tile fills its cell */
+    align-items: stretch;
+
+    width: 100%;
+    margin: 2px auto 0 auto;   /* center container */
+  }
+
+  .mode-tile {
+    /* keep desktop style but remove internal extra space */
+    min-width: 0;
+    max-width: none;
+    gap: 2px;
+    padding: 2px 0;
+  }
+
+  .mode-tile .key-btn {
+    margin: 2px 0;
+    padding: 3px 4px;
+    font-size: 0.55rem;  /* small so names fit */
+    border-radius: 8px;
+  }
+}
+
+
+/* --- Pulse effect for note highlights --- */
+.text-pulse {
+  animation: pulseOnce 0.7s ease-out;
+}
+@keyframes pulseOnce {
+  0% { opacity: 0; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
+  20% { opacity: 1; filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)); }
+  100% { opacity: 0; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
+}
+
+/* ===== MODE CONTROLS (Desktop & Mobile) ===== */
+#mode-controls {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-family: 'Cardo', serif;
+  color: #ddd;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.control-label {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-group button {
+  background: #222;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 18px;
+  line-height: 24px;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(255,255,255,0.08), inset 0 0 6px rgba(255,255,255,0.06);
+}
+
+#family-display,
+#notes-display {
+  min-width: 78px;             /* a touch wider for desktop polish */
+  text-align: center;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #0f0f0f;
+  border: 1px solid #333;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.04);
+}
+
+#index-input {
+  background: #111;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 6px;
+  text-align: center;
+  width: 76px;
+  height: 28px;
+  font-size: 14px;
+  box-shadow: inset 0 0 6px rgba(255,255,255,0.06);
+}
+
+/* Mobile tightening */
+@media (max-width: 768px) {
+  #mode-controls { gap: 16px; }
+  .control-label { font-size: 12px; }
+  .control-group button {
+    width: 24px; height: 24px; font-size: 16px;
+  }
+  #family-display, #notes-display {
+    min-width: 66px; padding: 3px 6px; border-radius: 5px;
+  }
+  #index-input { width: 66px; height: 24px; font-size: 13px; }
+}
+
+
+/* --- Glow + Spoke Effects --- */
+.glow-active {
+  stroke-width: 2px !important;
+  opacity: 1;
+  animation: spokeGlow 0.8s ease-out forwards;
+}
+@keyframes spokeGlow {
+  0% { stroke: var(--glow-color, white); stroke-opacity: 0.7; }
+  50% { stroke: var(--glow-color, white); stroke-opacity: 1; }
+  100% { stroke: var(--glow-color, white); stroke-opacity: 0.8; }
+}
+text.note-label.glow-active {
+  fill: var(--glow-color, white);
+  filter: brightness(1.8);
+  animation: iosGlowText 0.8s ease-out forwards;
+}
+@keyframes iosGlowText {
+  0% { fill-opacity: 1; text-shadow: 0 0 6px var(--glow-color, white); }
+  50% { fill-opacity: 1; text-shadow: 0 0 12px var(--glow-color, white); }
+  100% { fill-opacity: 1; text-shadow: 0 0 0 var(--glow-color, white); }
+}
+.spoke-glow {
+  stroke-linecap: round;
+  animation: spokeClonePulse 0.7s ease-out forwards;
+}
+@keyframes spokeClonePulse {
+  0% { stroke-opacity: 0; filter: brightness(1.2); }
+  30% { stroke-opacity: 1; filter: brightness(2); }
+  100% { stroke-opacity: 0; filter: brightness(1); }
+}
+.spoke-halo {
+  opacity: 0;
+  transition: opacity 0.7s ease-out;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  filter: blur(1.2px) brightness(1.5);
+}
+
+
+/* === Embedded-in-site overrides === */
+#mw-container{
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Let the wheel sit fully in view and allow page to scroll for controls */
+#mw-container, #controls{
+  height: auto;
+}
+
+/* Make key tiles always 7 across on desktop widths, without awkward wrap */
+#key-rows{
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 980px;
+  margin: 8px auto 0;
+  padding: 0;
+}
+.mode-tile{
+  flex: initial; /* neutralize flex rules from earlier */
+  width: auto;
+  min-width: 0;
+}
+@media (max-width: 768px){
+  #key-rows{
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+@media (max-width: 420px){
+  #key-rows{
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+#mw-app{ text-align: left; }
+
+/* === Mode tiles layout override: center-align and smart 1- or 2-row split === */
+#key-rows{
+  /* we will wrap tiles into explicit rows via JS */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0 !important;
+}
+#key-rows .mode-row{
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+#key-rows .mode-row > *{
+  margin: 0 !important;
+}
+
+
+
+/* === Mobile interaction fixes === */
+/* Prevent accidental text selection/highlight and reduce zoom quirks */
+#mw-container, #mw-container * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#controls, #mode-controls, #action-controls, #interval-controls, #key-area, #key-rows {
+  touch-action: pan-y;
+}
+
+/* Buttons/inputs: allow taps without triggering double-tap zoom */
+#mw-container button, #mw-container input {
+  touch-action: manipulation;
+}
+
+
+@media (max-width: 768px){
+  .mode-tile .roman-btn{
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 1.05;
+  }
+}
