@@ -5170,51 +5170,6 @@ function renderKey(sel) {
     col.appendChild(nameBtn);
     keyRows.appendChild(tile);
   });
-
-  applyMobileTileAutofit();
-}
-
-// Mobile-only: auto-fit mode-name text so nothing clips, while preserving word wrapping.
-// We shrink only when needed, and never force nowrap.
-function applyMobileTileAutofit(){
-  if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
-
-  // Defer until after layout so measurements are accurate on iOS Safari.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const minPx = 10;     // don't go below this
-      const step  = 0.5;    // shrink step
-      const maxLoops = 24;
-
-      document.querySelectorAll('.mode-tile .key-name').forEach(btn => {
-        const text = (btn.textContent || '').trim();
-
-        // Reset to CSS-driven size first
-        btn.style.fontSize = '';
-        btn.style.whiteSpace = 'normal';
-
-        // Single-word labels (e.g., "Mixolydian") need in-word breaking on tiny screens.
-        // Multi-word labels keep natural wrapping on spaces.
-        if (text && !/\s/.test(text)) {
-          btn.style.wordBreak = 'break-word';
-          btn.style.overflowWrap = 'anywhere';
-        } else {
-          btn.style.wordBreak = 'normal';
-          btn.style.overflowWrap = 'normal';
-        }
-
-        // Shrink only if it still overflows its box
-        let loops = 0;
-        while (loops < maxLoops && (btn.scrollWidth > btn.clientWidth || btn.scrollHeight > btn.clientHeight)) {
-          const cs = window.getComputedStyle(btn);
-          const cur = parseFloat(cs.fontSize || '0');
-          if (!cur || cur <= minPx) break;
-          btn.style.fontSize = (cur - step) + 'px';
-          loops++;
-        }
-      });
-    });
-  });
 }
 
  // ===== Dragging and Rotation Logic (no-jump, smooth grab) =====
