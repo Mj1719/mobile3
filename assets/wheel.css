@@ -150,6 +150,61 @@ svg#wheel {
   padding: 0;
 }
 
+  .mode-tile{
+    min-width: 0;
+    max-width: none;
+    gap: 0px;
+    padding: 0px;
+
+    /* Remove external borders that read as gaps; use inset outline instead */
+    border: none;
+    border-radius: 0px;
+    box-shadow: none;
+
+}
+
+  .mode-tile .key-btn{
+    margin: 0;
+    width: 100%;
+
+    /* tighter padding to reclaim width */
+    padding: 2px 2px;
+
+    /* square edges so tiles butt cleanly */
+    border-radius: 0px;
+
+    /* Restore the 'edge' feel with an internal stroke */
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10),
+                inset 0 0 10px rgba(255,255,255,0.06);
+
+}
+
+  .mode-tile .roman-btn{
+    /* subtle divider between numeral and name */
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10),
+                inset 0 -1px 0 rgba(255,255,255,0.08),
+                inset 0 0 10px rgba(255,255,255,0.06);
+    font-size: 0.70rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 1.05;
+
+}
+
+  .mode-tile .key-name{
+    font-size: clamp(0.58rem, 2.9vw, 0.66rem);
+    font-weight: 700;
+    letter-spacing: 0px;
+    line-height: 1.05;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+
+}
+
 .mode-tile {
   position: relative;
   flex: 1 1 110px;
@@ -277,35 +332,56 @@ svg#wheel {
 
 /* ===== MOBILE: 7 tiles centered, desktop look preserved ===== */
 @media (max-width: 768px) {
-  /* Pick a tile width that fits 7 across on small phones (SE width ~375px) */
+  /* Tighter tile grid on small phones (SE width ~375px) */
   #key-rows {
     display: grid;
     grid-template-columns: repeat(7, 13.5vw);  /* ~50–52px per tile on small screens */
-    column-gap: 3px;
-    row-gap: 1px;
+    column-gap: 1px;
+    row-gap: 0px;
 
     /* Center the whole grid */
-    justify-content: center;   /* centers the columns block */
-    justify-items: stretch;    /* tile fills its cell */
+    justify-content: center;
+    justify-items: stretch;
     align-items: stretch;
 
     width: 100%;
-    margin: 2px auto 0 auto;   /* center container */
+    margin: 2px auto 0 auto;
   }
 
   .mode-tile {
     /* keep desktop style but remove internal extra space */
     min-width: 0;
     max-width: none;
-    gap: 2px;
-    padding: 2px 0;
+    gap: 1px;
+    padding: 1px 0;
   }
 
+  /* Shared button tweaks (tighter tiles) */
   .mode-tile .key-btn {
-    margin: 2px 0;
-    padding: 3px 4px;
-    font-size: 0.55rem;  /* small so names fit */
-    border-radius: 8px;
+    margin: 1px 0;
+    padding: 2px 3px;
+    border-radius: 5px;
+  }
+
+  /* Roman numerals: slightly larger + bold */
+  .mode-tile .roman-btn{
+    font-size: 0.70rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 1.05;
+  }
+
+  /* Mode names: preserve multi-line wrapping (e.g., 'Lydian Augmented') */
+  .mode-tile .key-name{
+    font-size: clamp(0.58rem, 2.9vw, 0.66rem);
+    font-weight: 700;
+    letter-spacing: 0px;
+    line-height: 1.05;
+
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
   }
 }
 
@@ -519,14 +595,4 @@ text.note-label.glow-active {
 /* Buttons/inputs: allow taps without triggering double-tap zoom */
 #mw-container button, #mw-container input {
   touch-action: manipulation;
-}
-
-
-@media (max-width: 768px){
-  .mode-tile .roman-btn{
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    line-height: 1.05;
-  }
 }
