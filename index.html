@@ -6,7 +6,7 @@
   <title>Home — Mode Wheel</title>
   <meta name="description" content="Mode Wheel: an interactive instrument for exploring modes, scales, and harmonic structure." />
   <link rel="stylesheet" href="assets/site.css?v=5" />
-  <link rel="stylesheet" href="assets/wheel.css?v=5">
+  <link rel="stylesheet" href="assets/wheel.css?v=11">
 </head>
 <body>
   <div class="page">
@@ -54,9 +54,50 @@
   <div class="inlay">
     
     <div id="mw-app">
-      <div id="mw-container">
-    <svg id="wheel" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
-        <div id="controls">
+      <div id="mw-container">      <div id="mw-toprow">
+        <svg id="wheel" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+
+        <aside id="scale-info-panel" aria-label="Scale analysis panel">
+          <div class="sip-header">
+            <div class="sip-title"><span id="sip-title">C Ionian</span></div>
+            <button id="sip-toggle" type="button" aria-expanded="false" aria-controls="sip-body">+</button>
+          </div>
+
+          <div id="sip-body" hidden>
+            <div class="sip-section">
+              <div class="sip-spelling-row">
+                <div class="sip-spelling-label">Spelling</div>
+                <div class="sip-spell-btns" role="tablist" aria-label="Spelling controls">
+                  <button id="sip-spell-natural" type="button" class="sip-btn active" aria-pressed="true" title="Natural spelling">♮</button>
+                  <button id="sip-spell-sharp" type="button" class="sip-btn" aria-pressed="false" title="Sharp spelling">#</button>
+                  <button id="sip-spell-flat" type="button" class="sip-btn" aria-pressed="false" title="Flat spelling">♭</button>
+                  <button id="sip-spell-enharmonic" type="button" class="sip-btn active sip-enharmonic-btn" aria-pressed="true" title="Enharmonic spelling is available only for 7-note scales without gaps larger than an augmented second.">Enharmonic</button>
+                  <button id="sip-spell-set" type="button" class="sip-btn sip-set-btn" aria-pressed="false" title="Show fixed set notation where C = 0">Set</button>
+                </div>
+              </div>
+              <div id="sip-spell" class="sip-mono">C D E F G A B</div>
+            </div>
+
+            <div class="sip-section">
+              <div class="sip-interval-row">
+                <div class="sip-spelling-label">Intervals</div>
+                <div class="sip-interval-btns" role="tablist" aria-label="Interval display controls">
+                  <button id="sip-interval-degrees" type="button" class="sip-btn active" aria-pressed="true" title="Show scale degrees based on the current spelling">Degrees</button>
+                  <button id="sip-interval-intervals" type="button" class="sip-btn" aria-pressed="false" title="Show named intervals based on the current spelling">Intervals</button>
+                  <button id="sip-interval-steps" type="button" class="sip-btn" aria-pressed="false" title="Show semitone steps from the root">Steps</button>
+                </div>
+              </div>
+              <div id="sip-interval-display" class="sip-mono">1 2 3 4 5 6 7</div>
+            </div>
+
+            <div class="sip-section">
+              <div class="sip-label">Interval-class histogram</div>
+              <div id="sip-hist" class="sip-hist"></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+<div id="controls">
           <div id="interval-controls"></div>
           <div id="action-controls">
             <button id="play-mode">Play Mode</button>
@@ -87,9 +128,31 @@
               </div>
             </div>
     
+            
+
             <div class="control-group">
+              <div class="control-label">Key</div>
+              <div class="control-row">
+                <button id="key-prev">◀</button>
+                <span id="key-display">C</span>
+                <button id="key-next">▶</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">Mode</div>
+              <div class="control-row">
+                <button id="mode-prev">◀</button>
+                <span id="mode-display">Ionian</span>
+                <button id="mode-next">▶</button>
+              </div>
+            </div>
+<div class="control-group">
               <div class="control-label">Index</div>
-              <input type="text" id="index-input" placeholder="7.1.1" maxlength="6">
+              <div class="control-row">
+                <input type="text" id="index-input" placeholder="7.1.0.1" maxlength="10">
+                <button id="reset-wheel" type="button" title="Return to C Major" aria-label="Return to C Major">↺</button>
+              </div>
             </div>
           </div>
         </div>
@@ -109,7 +172,7 @@
       </footer>
     </div>
   </div>
-  <script src="assets/wheel.js?v=5"></script>
+  <script src="assets/wheel.js?v=11"></script>
   <script src="assets/mobile-nav.js?v=5"></script>
 </body>
 </html>

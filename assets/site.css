@@ -10,14 +10,15 @@
   --stoneB:#17181c;
   --stoneC:#2f3037;
 
-  /* Subtle accent tints (vivid yet subdued) */
-  --c-modewheel:#c43f3f;
-  --c-about:#c98a35;
-  --c-theory:#c8bb2f;
-  --c-harmonics:#3ea565;
-  --c-spheres:#2f78c8;
-  --c-shop:#5b49c6;
-  --c-contact:#a147c6;
+  /* Muted spectrum */
+  --c-modewheel:#8a3a3a;
+  --c-about:#8f6a3a;
+  --c-theory:#8f883a;
+  --c-harmonics:#3f7a57;
+  --c-spheres:#3a5f8f;
+  --c-shop:#4a3f8f;
+  --c-contact:#7a3f8f;
+
 
   --railW: 252px;
   --btnH: 60px;
@@ -530,5 +531,255 @@ a:focus, button:focus{ outline: 2px solid rgba(255,255,255,.30); outline-offset:
   .key-btn {
     font-size: 16px;
     padding: 6px 8px;
+  }
+}
+
+
+/* === Rebalanced original style: keep sidebar/buttons, clean content pages === */
+/* Black page field instead of grey stone wash */
+html, body{
+  background: #000 !important;
+  background-image: none !important;
+  background-color: #000 !important;
+}
+
+/* Keep the original rail shape/frame/button styling, but remove the grey stone fill */
+.rail,
+.topbar{
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Keep original nav button frames and typography, but remove their grey slab fill */
+.navbtn::before{
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 28%, rgba(0,0,0,0.96)),
+      color-mix(in srgb, var(--accent) 14%, rgba(0,0,0,0.98))) !important;
+}
+
+/* Standard non-wheel content pages: remove card frame, ornaments, grey fill, and bevels */
+.card,
+.card.frame-outer,
+.card.stone,
+.card .inlay{
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.card.frame-outer::before,
+.card.frame-outer::after{
+  display: none !important;
+  content: none !important;
+}
+
+.card{
+  max-width: 980px;
+  padding: 0 !important;
+}
+
+.card .inlay{
+  padding: 20px !important;
+}
+
+/* Keep the wheel stage and wheel CSS as originally styled for now. */
+
+
+
+/* === Wheel page: remove frame + grey background ONLY === */
+#wheel-stage.stone,
+#wheel-stage.frame-outer {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+#wheel-stage.frame-outer::before,
+#wheel-stage.frame-outer::after {
+  display: none !important;
+  content: none !important;
+}
+
+#wheel-stage .inlay {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+
+/* === Footer: Anchor to Desktop Sidebar/Rail === */
+/* The footer lives in the page content markup, but on desktop it should read
+   as part of the navigation rail rather than the Mode Wheel/instrument area. */
+@media (min-width: 900px) {
+  .rail {
+    padding-bottom: 48px !important; /* reserve visual space for the footer */
+  }
+
+  .content > .footer,
+  .footer {
+    position: fixed !important;
+    left: 0 !important;
+    bottom: 12px !important;
+    z-index: 8 !important;
+
+    width: var(--railW) !important;
+    max-width: var(--railW) !important;
+
+    margin: 0 !important;
+    padding: 0 14px !important;
+
+    text-align: center !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    color: rgba(255,255,255,0.48) !important;
+    opacity: 0.50 !important;
+
+    pointer-events: none !important;
+  }
+}
+
+/* On mobile/tablet, keep the footer in the normal page flow. */
+@media (max-width: 899px) {
+  .footer {
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 14px 18px 20px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}
+/* =========================================================
+   MODEWHEEL DESKTOP VIEWPORT LOCK V3 — Safari-safe scoped page shell
+   ---------------------------------------------------------
+   Requires body.modewheel-page, added by wheel.js.
+   Desktop only. Mobile/tablet stays scrollable.
+   ========================================================= */
+
+@media (min-width: 900px) {
+  body.modewheel-page {
+    height: 100%;
+    overflow: hidden !important;
+  }
+
+  body.modewheel-page .page {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  body.modewheel-page .rail {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  body.modewheel-page .content {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.modewheel-page .main {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 18px !important;
+  }
+
+  /*
+    Keep the instrument visible outside its nominal frame.
+    Left stack and mode tiles use absolute positioning around the wheel.
+  */
+  body.modewheel-page #wheel-stage,
+  body.modewheel-page #wheel-stage.frame-outer,
+  body.modewheel-page #wheel-stage .inlay {
+    height: calc(100dvh - 36px) !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.modewheel-page #wheel-stage .inlay {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Decorative smoked-glass rails, ModeWheel desktop only. */
+  body.modewheel-page .content::before,
+  body.modewheel-page .content::after {
+    content: "";
+    position: fixed;
+    left: var(--railW);
+    right: 0;
+    height: 24px;
+    z-index: 7;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(0,0,0,0.74),
+        rgba(0,0,0,0.26) 70%,
+        rgba(0,0,0,0)
+      );
+  }
+
+  body.modewheel-page .content::before {
+    top: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+
+  body.modewheel-page .content::after {
+    bottom: 0;
+    transform: scaleY(-1);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+}
+
+/* Mobile/tablet safeguard: ModeWheel page remains scrollable. */
+@media (max-width: 899px) {
+  body.modewheel-page {
+    height: auto !important;
+    min-height: 100%;
+    overflow: auto !important;
+  }
+
+  body.modewheel-page .page,
+  body.modewheel-page .content,
+  body.modewheel-page .main,
+  body.modewheel-page #wheel-stage,
+  body.modewheel-page #wheel-stage .inlay {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  body.modewheel-page .content::before,
+  body.modewheel-page .content::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+
+
+/* === CENTERING PASS === */
+@media (min-width: 900px) {
+  body.modewheel-page #wheel-stage .inlay {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  body.modewheel-page #mw-container {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100%;
   }
 }

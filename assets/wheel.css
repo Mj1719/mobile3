@@ -15,6 +15,8 @@
 }
 
 #mw-container {
+  --wheelSize: min(80vmin, 720px);
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -25,10 +27,8 @@
 
 /* --- WHEEL SIZE & LAYOUT --- */
 svg#wheel {
-  width: 80vmin;
-  max-width: 720px;
-  height: 80vmin;
-  max-height: 720px;
+  width: var(--wheelSize);
+  height: var(--wheelSize);
   display: block;
   user-select: none;
   touch-action: none;
@@ -48,14 +48,14 @@ svg#wheel {
   fill: url(#stoneGrad);
   stroke: #171717;
   stroke-width: 3;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 
 .note-circle {
   fill: #1b1b1c;
   stroke: #444;
   stroke-width: 3;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 
 .note-label {
@@ -66,17 +66,20 @@ svg#wheel {
 
 /* --- Color spokes --- */
 .spoke {
-  stroke-width: 6;
-  vector-effect: non-scaling-stroke;
+  stroke-width: 4 !important;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  filter: none !important;
+}
+
+.spoke.on {
+  opacity: 0.9 !important;
 }
 .spoke.on { opacity: 1; }
 
 .center {
-  fill: #111;
-  stroke: #3b3b3b;
-  stroke-width: 3;
+  fill: rgba(5,5,7, 1) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+  stroke-width: 2 !important;
 }
 
 /* --- Interval Ring --- */
@@ -91,7 +94,7 @@ svg#wheel {
 .interval-wedge.active {
   fill: #ffffff55;
   stroke: #eee;
-  filter: drop-shadow(0 0 12px #fff);
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
 }
 .interval-label {
   fill: #ffffff;
@@ -316,7 +319,7 @@ svg#wheel {
 }
 @keyframes pulseOnce {
   0% { opacity: 0; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-  20% { opacity: 1; filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)); }
+  20% { opacity: 1; filter: drop-shadow(0 0 6px rgba(255,255,255,0.5)); }
   100% { opacity: 0; filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
 }
 
@@ -363,16 +366,25 @@ svg#wheel {
 }
 
 #family-display,
+#mode-display,
+#key-display,
 #notes-display {
-  min-width: 78px;             /* a touch wider for desktop polish */
   text-align: center;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
   background: #0f0f0f;
   border: 1px solid #333;
   box-shadow: inset 0 0 10px rgba(255,255,255,0.04);
 }
+
+/* Proportions */
+#notes-display { width: 44px; padding: 4px 10px; }
+#key-display   { width: 68px; padding: 4px 10px; white-space: nowrap; }  /* fixed width to prevent arrow jump */
+/* extra breathing room for natural keys */
+#family-display,
+#mode-display  { min-width: 88px; }
+
 
 #index-input {
   background: #111;
@@ -386,9 +398,50 @@ svg#wheel {
   box-shadow: inset 0 0 6px rgba(255,255,255,0.06);
 }
 
+#reset-wheel {
+  background: #222;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(255,255,255,0.08),
+              inset 0 0 6px rgba(255,255,255,0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#reset-wheel:active {
+  transform: translateY(1px);
+}
+
 /* Mobile tightening */
 @media (max-width: 768px) {
-  #mode-controls { gap: 16px; }
+  #mode-controls { gap: 14px; }
+
+  #mode-controls{
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: 10px 14px;
+    justify-content: center;
+    align-items: start;
+  }
+  #mode-controls .control-group:last-child{ grid-column: 1 / -1; }
+
+  .control-label { font-size: 12px; }
+  .control-group button{ width: 24px; height: 24px; font-size: 16px; line-height: 22px; }
+
+  #notes-display { width: 44px; padding: 3px 8px; }
+  #key-display   { width: 58px; padding: 3px 8px; white-space: nowrap; }
+  #family-display, #mode-display { min-width: 88px; padding: 3px 8px; }
+  #index-input { width: 74px; height: 24px; font-size: 13px; }
+}
+
   .control-label { font-size: 12px; }
   .control-group button {
     width: 24px; height: 24px; font-size: 16px;
@@ -399,6 +452,15 @@ svg#wheel {
   #index-input { width: 66px; height: 24px; font-size: 13px; }
 }
 
+
+
+/* Stronger glow for note circles when played */
+circle.note-circle.glow-active{
+  stroke: var(--glow-color, #ffffff) !important;
+  stroke-width: 4px !important;
+  filter:
+    drop-shadow(0 0 3px var(--glow-color, #ffffff));
+}
 
 /* --- Glow + Spoke Effects --- */
 .glow-active {
@@ -522,17 +584,3801 @@ text.note-label.glow-active {
 }
 
 
-@media (max-width: 768px){
-  /* Roman numerals: slightly larger + bold, but not taller */
-  .mode-tile .roman-btn{
-    font-size: 0.70rem;
-    font-weight: 700;
-    letter-spacing: 0.2px;
+/* Tandem rotation grab points (transparent hitboxes at spoke ends) */
+.dual-rotate-handle{
+  /* iOS Safari: needs a non-zero fill for touch hit-testing */
+  fill: rgba(0,0,0,0.02);
+  stroke: rgba(0,0,0,0.0);
+  stroke-width: 18; /* expands hit area invisibly */
+  pointer-events: all;
+  cursor: grab;
+  touch-action: none;
+}
+.dual-rotate-handle:active{ cursor: grabbing; }
+
+
+/* --- Desktop Scale Info Panel --- */
+#mw-container{
+  position: relative; /* anchor for absolutely-positioned panel */
+}
+
+/* Keep wheel centered; panel floats on the right without affecting layout */
+#mw-toprow{
+  position: relative;
+  width: 100%;
+}
+
+#mw-toprow > #wheel{
+  display: block;
+  margin: 0 auto;
+}
+
+#scale-info-panel{
+  position: absolute;
+  z-index: 5;
+  top: 6px;
+  left: calc(50% + (var(--wheelSize) / 2) + 16px);
+
+  width: 260px;
+  max-width: 34vw;
+  padding: 12px 12px 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.18);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+  user-select: none;
+}
+
+.sip-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sip-title{
+  font-size: 15px;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+#sip-toggle{
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.20);
+  background: rgba(0,0,0,0.18);
+  color: rgba(255,255,255,0.92);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#sip-toggle:active{ transform: translateY(1px); }
+
+/* Collapsible panel body */
+#sip-body{
+  margin-top: 10px;
+  display: grid;
+  gap: 12px;
+}
+#sip-body[hidden]{ display: none !important; }
+
+.sip-label{
+  font-size: 12px;
+  opacity: 0.86;
+  margin-bottom: 6px;
+}
+
+.sip-mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  opacity: 0.95;
+}
+
+.sip-hist{
+  display: grid;
+  gap: 7px;
+}
+
+.sip-row{
+  display: grid;
+  grid-template-columns: 64px 26px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.sip-ic{
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.sip-count{
+  font-size: 12px;
+  text-align: right;
+  opacity: 0.9;
+}
+
+.sip-bar{
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.10);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.sip-bar > span{
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: rgba(255,255,255,0.35);
+}
+
+/* Hide desktop scale info panel on smaller screens.
+   The panel is absolutely positioned to the right of the wheel on desktop;
+   on mobile it can peek in from the edge unless it is fully removed. */
+@media (max-width: 900px){
+  #scale-info-panel{
+    display: none !important;
+  }
+}
+
+
+/* Spelling buttons */
+.sip-spelling-row{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sip-spelling-label{
+  font-size: 12px;
+  opacity: 0.86;
+}
+.sip-spell-btns{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  width: 100%;
+}
+
+.sip-interval-row{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sip-interval-btns{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  width: 100%;
+}
+#sip-interval-display{
+  margin-top: 2px;
+}
+
+.sip-btn{
+  padding: 4px 7px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.16);
+  color: rgba(255,255,255,0.92);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.sip-btn.active{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.32);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(0,0,0,0.35);
+  transform: translateY(1px);
+}
+
+/* Enharmonic spelling toggle state */
+.sip-enharmonic-row{
+  margin-top: 6px;
+}
+.sip-btn:disabled,
+.sip-btn.disabled{
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+}
+
+.sip-enharmonic-btn{
+  min-width: 84px;
+}
+
+.sip-btn.disabled,
+.sip-btn:disabled{
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.sip-set-btn{
+  min-width: 38px;
+}
+
+
+
+/* === Dark Glass / Obsidian Instrument Pass === */
+/* This block intentionally overrides only the wheel/instrument visuals. */
+
+/* Keep the SVG transparent against the black page, but add a barely visible internal sheen. */
+svg#wheel {
+  background:
+    radial-gradient(circle at 50% 30%,
+      rgba(255,255,255,0.035),
+      rgba(255,255,255,0.010) 28%,
+      transparent 62%);
+  isolation: isolate;
+}
+
+/* Main wheel body: dark glass / obsidian instead of grey stone. */
+.stone-ring {
+  fill: rgba(8, 8, 11, 0.94) !important;
+  stroke: rgba(255,255,255,0.095) !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 4px 9px rgba(0,0,0,0.48)) !important;
+}
+
+/* Interval ring: still visibly clickable, but no longer chunky grey. */
+.interval-wedge {
+  fill: rgba(255,255,255,0.032) !important;
+  stroke: rgba(255,255,255,0.06) !important;
+  stroke-width: 1.1px !important;
+  transition: fill 0.18s ease, stroke 0.18s ease, filter 0.18s ease;
+}
+
+.interval-wedge:hover {
+  fill: rgba(255,255,255,0.07) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.16)) !important;
+}
+
+.interval-wedge.active {
+  fill: rgba(255,255,255,0.09) !important;
+  stroke: rgba(255,255,255,0.32) !important;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.22)) !important;
+}
+
+/* Note nodes: dark glass buttons, legible but restrained. */
+.note-circle {
+  fill: rgba(14, 14, 18, 0.96) !important;
+  stroke: rgba(255,255,255,0.14) !important;
+  stroke-width: 1.6 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.38)) !important;
+}
+
+.note-circle:hover {
+  stroke: rgba(255,255,255,0.32) !important;
+}
+
+/* Center anchor: dark, simple, not stone-like. */
+.center {
+  fill: rgba(5,5,7, 1) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+  stroke-width: 2 !important;
+}
+
+/* Spokes remain colorful and readable, but slightly less neon. */
+.spoke {
+  stroke-width: 4 !important;
+  opacity: 0;
+  filter: none !important;
+}
+
+.spoke.on {
+  opacity: 0.9 !important;
+}
+
+.spoke.on {
+  opacity: 0.82 !important;
+}
+
+/* Labels: crisp over dark glass. */
+.note-label,
+.interval-label {
+  fill: rgba(255,255,255,0.88) !important;
+  text-shadow: none !important;
+}
+
+/* Mode tiles become instrument pads: still colored, less web-button/neon. */
+.mode-tile {
+  background:
+    radial-gradient(circle at 50% 20%,
+      color-mix(in srgb, var(--tile-color) 48%, rgba(255,255,255,0.08)),
+      color-mix(in srgb, var(--tile-color) 34%, rgba(0,0,0,0.88)) 45%,
+      rgba(8,8,10,0.96) 130%) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -8px 14px rgba(0,0,0,0.34),
+    0 2px 6px rgba(0,0,0,0.28) !important;
+}
+
+.mode-tile:hover {
+  transform: scale(1.025) !important;
+  filter: brightness(1.12) !important;
+}
+
+.mode-tile .key-btn {
+  background-color: rgba(0,0,0,0.68) !important;
+  border: 1px solid rgba(255,255,255,0.055) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035) !important;
+}
+
+.mode-tile .key-btn:hover {
+  background-color: rgba(12,12,14,0.78) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+.mode-tile .key-btn.active {
+  background-color: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 0 4px rgba(255,255,255,0.18) !important;
+}
+
+/* Played/highlighted notes: visible, but not glow overload. */
+circle.note-circle.glow-active{
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px var(--glow-color, #ffffff)) !important;
+}
+
+text.note-label.glow-active {
+  fill: var(--glow-color, white) !important;
+  filter: brightness(1.22) !important;
+}
+
+/* Keep halos subtle. */
+.spoke-halo {
+  mix-blend-mode: screen;
+  filter: blur(0.8px) brightness(1.18) !important;
+}
+
+
+
+/* === Crisp Layered Glass Spokes + Mobile Tile Color Fallback === */
+/* These rules support the JS spoke stack: underlay + core + highlight.
+   No blur/drop-shadow, so the edges stay clean. */
+
+.spoke-stack .spoke-underlay,
+.spoke-stack .spoke,
+.spoke-stack .spoke-highlight {
+  opacity: 0;
+  pointer-events: none;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  vector-effect: non-scaling-stroke;
+}
+
+.spoke-stack.on .spoke-underlay {
+  opacity: 0.22;
+  stroke-width: 11;
+}
+
+.spoke-stack.on .spoke {
+  opacity: 0.95 !important;
+  stroke-width: 7.5 !important;
+  filter: none !important;
+}
+
+.spoke-stack.on .spoke-highlight {
+  opacity: 0.22;
+  stroke-width: 1.6;
+}
+
+/* Keep old single-spoke rules from interfering. */
+.spoke {
+  filter: none !important;
+  stroke-linecap: round;
+}
+
+/* Crisp playback pulse: broad but not blurry. */
+.spoke-halo {
+  opacity: 0;
+  transition: opacity 0.32s ease-out;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  filter: none !important;
+}
+
+/* Keep the center hub opaque above the spoke stack. */
+.center {
+  fill: rgba(5,5,7,1) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+  stroke-width: 2 !important;
+}
+
+/* Fallback for mobile browsers that ignore color-mix().
+   JS also sets an inline radial-gradient directly on each tile. */
+.mode-tile {
+  background-color: var(--tile-color) !important;
+  background-blend-mode: normal;
+}
+
+/* Small screens: simplify glass rods so they stay legible on iPhone SE. */
+@media (max-width: 480px) {
+  .spoke-stack.on .spoke-underlay {
+    opacity: 0.08;
+    stroke-width: 8.5;
+  }
+
+  .spoke-stack.on .spoke {
+    opacity: 1 !important;
+    stroke-width: 6.5 !important;
+  }
+
+  .spoke-stack.on .spoke-highlight {
+    opacity: 0.12;
+    stroke-width: 1.1;
+  }
+
+  .spoke-halo {
+    filter: none !important;
+    mix-blend-mode: normal !important;
+  }
+
+  .mode-tile {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -5px 10px rgba(0,0,0,0.30) !important;
+  }
+
+  .mode-tile .key-btn {
+    background-color: rgba(0,0,0,0.72) !important;
+  }
+}
+
+
+
+
+/* === Obsidian Gradient Notes + Interval Band Refinement === */
+/* Uses SVG gradients instead of small inner highlight circles, so the glass effect
+   reads as material depth rather than an extra drawn symbol. */
+
+.interval-glass-rim {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.interval-glass-rim-outer {
+  stroke: rgba(255,255,255,0.18) !important;
+  stroke-width: 1.7 !important;
+}
+
+.interval-glass-rim-inner {
+  stroke: rgba(255,255,255,0.105) !important;
+  stroke-width: 1.15 !important;
+}
+
+/* Interval wedges: subtle obsidian-glass body, still quiet enough not to distract. */
+.interval-wedge {
+  fill: url(#intervalGlassGrad) !important;
+  stroke: rgba(255,255,255,0.075) !important;
+  stroke-width: 1.05px !important;
+  filter: none !important;
+  transition: fill 0.18s ease, stroke 0.18s ease, filter 0.18s ease;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.20) !important;
+  filter: brightness(1.12) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(255,255,255,0.34) !important;
+  filter: brightness(1.22) !important;
+}
+
+/* Note nodes: obsidian bead material from an SVG radial gradient.
+   No internal outline/circle; the depth comes from the fill itself. */
+.note-circle {
+  fill: url(#noteGlassGrad) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+  stroke-width: 1.75 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.34)) !important;
+}
+
+.note-circle:hover {
+  stroke: rgba(255,255,255,0.34) !important;
+}
+
+/* Make sure the removed sheen layer never displays if an old cached DOM/CSS path survives. */
+.note-circle-sheen {
+  display: none !important;
+}
+
+/* Played/highlighted notes remain visible without bloom overload. */
+circle.note-circle.glow-active{
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px var(--glow-color, #ffffff)) !important;
+}
+
+/* Small-screen contrast boost for iPhone SE / mobile Safari. */
+@media (max-width: 480px) {
+  .interval-glass-rim-outer {
+    stroke: rgba(255,255,255,0.22) !important;
+    stroke-width: 1.6 !important;
+  }
+
+  .interval-glass-rim-inner {
+    stroke: rgba(255,255,255,0.12) !important;
+    stroke-width: 1.05 !important;
+  }
+
+  .interval-wedge {
+    stroke: rgba(255,255,255,0.105) !important;
+  }
+
+  .note-circle {
+    stroke: rgba(255,255,255,0.24) !important;
+    stroke-width: 1.65 !important;
+    filter: none !important;
+  }
+}
+
+
+/* === Layered Obsidian Note Rims === */
+/* Notes now get their glassiness from the edge: light-catching outer rim,
+   black separating band, and calm dark inner face. */
+
+.note-rim-outer,
+.note-rim-dark {
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.note-rim-outer {
+  fill: none !important;
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 3.6 !important;
+  opacity: 0.92;
+}
+
+.note-rim-dark {
+  fill: none !important;
+  stroke: rgba(0,0,0,0.82) !important;
+  stroke-width: 2.1 !important;
+  opacity: 0.96;
+}
+
+.note-circle {
+  fill: rgba(14,14,18,0.98) !important;
+  stroke: rgba(255,255,255,0.105) !important;
+  stroke-width: 1.05 !important;
+  filter: none !important;
+}
+
+.note-circle:hover {
+  fill: rgba(18,18,23,0.98) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+}
+
+/* When a note is played, brighten the rim rather than flooding the whole node. */
+.note-rim-outer:has(+ .note-rim-dark + .note-circle.glow-active) {
+  opacity: 1;
+}
+
+circle.note-circle.glow-active{
+  fill: rgba(18,18,23,1) !important;
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 1.8px !important;
+  filter: none !important;
+}
+
+/* Fallback: browsers that do not support :has still get a clean note face. */
+.note-circle-sheen {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .note-rim-outer {
+    stroke-width: 3.2 !important;
+    opacity: 0.96;
+  }
+
+  .note-rim-dark {
+    stroke-width: 1.8 !important;
+  }
+
+  .note-circle {
+    stroke: rgba(255,255,255,0.14) !important;
+    stroke-width: 0.9 !important;
+  }
+}
+
+
+/* === Refined Double-Band Note Rims === */
+/* Clear outer + inner outlines define the note circle; the glass gradient lives between them. */
+
+.note-rim-outline,
+.note-rim-glass {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Crisp outer boundary: visible but not chrome-heavy. */
+.note-rim-outline-outer {
+  stroke: rgba(220,222,232,0.32) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.96;
+}
+
+/* Glass material band between the two outlines. */
+.note-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.25 !important;
+  opacity: 0.82;
+}
+
+/* Inner boundary/separating edge: keeps the face defined and inset. */
+.note-rim-outline-inner {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.25 !important;
+  opacity: 1;
+}
+
+.note-circle {
+  fill: rgba(13,13,17,0.99) !important;
+  stroke: rgba(255,255,255,0.09) !important;
+  stroke-width: 0.8 !important;
+  filter: none !important;
+}
+
+.note-circle:hover {
+  fill: rgba(18,18,23,1) !important;
+  stroke: rgba(255,255,255,0.16) !important;
+}
+
+/* Deactivate older rim classes if any linger from cache/previous bundle. */
+.note-rim-outer,
+.note-rim-dark {
+  display: none !important;
+}
+
+/* Played note: light the full rim system, not just the face. */
+.note-rim-outline.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.9)) !important;
+  opacity: 0.95 !important;
+}
+
+.note-rim-glass.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.9)) !important;
+  stroke-width: 2.45 !important;
+  opacity: 0.72 !important;
+}
+
+circle.note-circle.glow-active {
+  fill: rgba(18,18,23,1) !important;
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 1.4px !important;
+  filter: none !important;
+}
+
+@media (max-width: 480px) {
+  .note-rim-outline-outer {
+    stroke: rgba(230,232,240,0.38) !important;
+    stroke-width: 1.05 !important;
+  }
+
+  .note-rim-glass {
+    stroke-width: 2.0 !important;
+    opacity: 0.86;
+  }
+
+  .note-rim-outline-inner {
+    stroke-width: 1.05 !important;
+  }
+
+  .note-circle {
+    stroke-width: 0.65 !important;
+  }
+}
+
+
+/* === Center Hub Double-Band + Softer Played Glow === */
+/* Center hub now shares the same visual language as the note nodes. */
+
+#center-hub {
+  pointer-events: none;
+}
+
+.center-rim-outline,
+.center-rim-glass {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.center-rim-outline-outer {
+  stroke: rgba(220,222,232,0.30) !important;
+  stroke-width: 1.2 !important;
+  opacity: 0.96;
+}
+
+.center-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.5 !important;
+  opacity: 0.80;
+}
+
+.center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.3 !important;
+  opacity: 1;
+}
+
+.center {
+  fill: rgba(11,11,15,1) !important;
+  stroke: rgba(255,255,255,0.085) !important;
+  stroke-width: 0.85 !important;
+  filter: none !important;
+}
+
+/* Softer playback pulse: rim participates, but does not become a thick static ring. */
+.note-rim-outline.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.68 !important;
+  animation: rimPulseSoft 0.72s ease-out forwards;
+}
+
+.note-rim-glass.glow-active {
+  stroke: var(--glow-color, rgba(255,255,255,0.85)) !important;
+  stroke-width: 2.25 !important;
+  opacity: 0.52 !important;
+  animation: rimPulseSoft 0.72s ease-out forwards;
+}
+
+circle.note-circle.glow-active {
+  fill: rgba(18,18,23,1) !important;
+  stroke: var(--glow-color, rgba(255,255,255,0.75)) !important;
+  stroke-width: 1.05px !important;
+  filter: none !important;
+  animation: noteFacePulseSoft 0.72s ease-out forwards;
+}
+
+@keyframes rimPulseSoft {
+  0%   { opacity: 0.24; }
+  20%  { opacity: 0.68; }
+  100% { opacity: 0; }
+}
+
+@keyframes noteFacePulseSoft {
+  0%   { stroke-opacity: 0.35; }
+  22%  { stroke-opacity: 0.82; }
+  100% { stroke-opacity: 0; }
+}
+
+/* The white spoke pulse should also decay gently instead of sitting too bright. */
+.spoke-halo {
+  transition: opacity 0.48s ease-out !important;
+}
+
+@media (max-width: 480px) {
+  .center-rim-outline-outer {
+    stroke: rgba(230,232,240,0.36) !important;
+    stroke-width: 1.05 !important;
+  }
+
+  .center-rim-glass {
+    stroke-width: 2.2 !important;
+    opacity: 0.84;
+  }
+
+  .center-rim-outline-inner {
+    stroke-width: 1.05 !important;
+  }
+
+  .center {
+    stroke-width: 0.7 !important;
+  }
+
+  .note-rim-outline.glow-active,
+  .note-rim-glass.glow-active,
+  circle.note-circle.glow-active {
+    animation-duration: 0.62s;
+  }
+}
+
+
+/* === Equalized Center Hub + Double-Banded Interval Ring === */
+/* Center hub now uses the exact same visual scale as note nodes. */
+#center-hub .center-rim-outline-outer {
+  stroke: rgba(220,222,232,0.32) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.96;
+}
+
+#center-hub .center-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.25 !important;
+  opacity: 0.82;
+}
+
+#center-hub .center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.25 !important;
+  opacity: 1;
+}
+
+#center-hub .center {
+  fill: rgba(13,13,17,0.99) !important;
+  stroke: rgba(255,255,255,0.09) !important;
+  stroke-width: 0.8 !important;
+  filter: none !important;
+}
+
+/* Hide older simpler interval rim classes if present. */
+.interval-glass-rim {
+  display: none !important;
+}
+
+/* Interval ring gets the same vocabulary:
+   crisp outline / glass band / black separating edge. */
+.interval-rim-outline,
+.interval-rim-glass,
+.interval-rim-dark {
+  fill: none !important;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.interval-rim-outline {
+  stroke: rgba(220,222,232,0.20) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.92;
+}
+
+.interval-rim-glass {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.15 !important;
+  opacity: 0.42;
+}
+
+.interval-rim-dark {
+  stroke: rgba(0,0,0,0.74) !important;
+  stroke-width: 1.05 !important;
+  opacity: 0.92;
+}
+
+/* Outer contour should remain a touch clearer so the wheel does not dissolve into black. */
+.interval-rim-outline-outer {
+  stroke: rgba(225,226,235,0.27) !important;
+  stroke-width: 1.2 !important;
+}
+
+.interval-rim-glass-outer {
+  opacity: 0.50;
+}
+
+.interval-rim-dark-outer {
+  opacity: 0.86;
+}
+
+/* Inner boundary can be slightly quieter to avoid competing with spokes/notes. */
+.interval-rim-outline-inner {
+  stroke: rgba(220,222,232,0.15) !important;
+}
+
+.interval-rim-glass-inner {
+  opacity: 0.32;
+}
+
+.interval-rim-dark-inner {
+  opacity: 0.82;
+}
+
+/* Keep wedge bodies calm underneath the new rim structure. */
+.interval-wedge {
+  fill: url(#intervalGlassGrad) !important;
+  stroke: rgba(255,255,255,0.052) !important;
+  stroke-width: 0.9px !important;
+  filter: none !important;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.16) !important;
+  filter: brightness(1.10) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(255,255,255,0.26) !important;
+  filter: brightness(1.16) !important;
+}
+
+@media (max-width: 480px) {
+  .interval-rim-outline-outer {
+    stroke: rgba(235,236,244,0.34) !important;
+    stroke-width: 1.15 !important;
+  }
+
+  .interval-rim-glass-outer {
+    opacity: 0.52;
+    stroke-width: 1.9 !important;
+  }
+
+  .interval-rim-outline-inner {
+    stroke: rgba(230,232,240,0.18) !important;
+  }
+
+  .interval-rim-glass-inner {
+    opacity: 0.30;
+    stroke-width: 1.8 !important;
+  }
+
+  .interval-rim-dark {
+    stroke-width: 0.95 !important;
+  }
+}
+
+
+/* === Visible Interval Double-Band Refinement === */
+/* Rims are drawn above the wedges. This pass makes the inner/outer edges read clearly:
+   outline / glass sheen / black separating edge. */
+
+.interval-rim-outline,
+.interval-rim-glass,
+.interval-rim-dark {
+  display: initial !important;
+  fill: none !important;
+  pointer-events: none !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Outer edge: most visible, so the wheel no longer dissolves into black. */
+.interval-rim-outline-outer {
+  stroke: rgba(235,236,244,0.34) !important;
+  stroke-width: 1.35 !important;
+  opacity: 1 !important;
+}
+
+.interval-rim-glass-outer {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 3.1 !important;
+  opacity: 0.68 !important;
+}
+
+.interval-rim-dark-outer {
+  stroke: rgba(0,0,0,0.86) !important;
+  stroke-width: 1.25 !important;
+  opacity: 0.95 !important;
+}
+
+/* Inner edge: defined, but slightly quieter so it doesn't fight the spokes. */
+.interval-rim-outline-inner {
+  stroke: rgba(230,232,240,0.24) !important;
+  stroke-width: 1.18 !important;
+  opacity: 0.96 !important;
+}
+
+.interval-rim-glass-inner {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.65 !important;
+  opacity: 0.48 !important;
+}
+
+.interval-rim-dark-inner {
+  stroke: rgba(0,0,0,0.82) !important;
+  stroke-width: 1.1 !important;
+  opacity: 0.92 !important;
+}
+
+/* Quiet the wedge separators a bit so the new rim treatment is visible. */
+.interval-wedge {
+  stroke: rgba(255,255,255,0.042) !important;
+  stroke-width: 0.78px !important;
+}
+
+@media (max-width: 480px) {
+  .interval-rim-outline-outer {
+    stroke: rgba(245,246,252,0.42) !important;
+    stroke-width: 1.25 !important;
+  }
+
+  .interval-rim-glass-outer {
+    stroke-width: 2.65 !important;
+    opacity: 0.72 !important;
+  }
+
+  .interval-rim-outline-inner {
+    stroke: rgba(235,236,244,0.28) !important;
+  }
+
+  .interval-rim-glass-inner {
+    stroke-width: 2.25 !important;
+    opacity: 0.50 !important;
+  }
+}
+
+
+/* === Subtle Obsidian Interval Ring Pass === */
+/* Reduce graphic grey outlines. Outer edge gets the material treatment;
+   inner edge becomes quieter so the interval band reads as dark glass, not a bordered diagram. */
+
+/* Keep the rim layers visible, but make them material-like. */
+.interval-rim-outline,
+.interval-rim-glass,
+.interval-rim-dark {
+  display: initial !important;
+  fill: none !important;
+  pointer-events: none !important;
+  vector-effect: non-scaling-stroke;
+}
+
+/* OUTER EDGE: dark separators with a low-opacity glass band between them. */
+.interval-rim-outline-outer {
+  stroke: rgba(230,232,240,0.16) !important;
+  stroke-width: 0.85 !important;
+  opacity: 0.9 !important;
+}
+
+.interval-rim-glass-outer {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 4.4 !important;
+  opacity: 0.24 !important;
+}
+
+.interval-rim-dark-outer {
+  stroke: rgba(0,0,0,0.88) !important;
+  stroke-width: 1.15 !important;
+  opacity: 0.95 !important;
+}
+
+/* INNER EDGE: much quieter; it defines the band without creating a second loud ring. */
+.interval-rim-outline-inner {
+  stroke: rgba(225,226,235,0.10) !important;
+  stroke-width: 0.75 !important;
+  opacity: 0.82 !important;
+}
+
+.interval-rim-glass-inner {
+  stroke: url(#noteRimGrad) !important;
+  stroke-width: 2.4 !important;
+  opacity: 0.12 !important;
+}
+
+.interval-rim-dark-inner {
+  stroke: rgba(0,0,0,0.72) !important;
+  stroke-width: 0.95 !important;
+  opacity: 0.78 !important;
+}
+
+/* Wedges should become the body of the glass plate, not a high-contrast segmented border. */
+.interval-wedge {
+  fill: url(#intervalGlassGrad) !important;
+  stroke: rgba(255,255,255,0.030) !important;
+  stroke-width: 0.65px !important;
+  filter: none !important;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.12) !important;
+  filter: brightness(1.08) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(255,255,255,0.20) !important;
+  filter: brightness(1.13) !important;
+}
+
+/* Mobile: preserve legibility, but still avoid the heavy grey-outline look. */
+@media (max-width: 480px) {
+  .interval-rim-outline-outer {
+    stroke: rgba(240,242,248,0.22) !important;
+    stroke-width: 0.85 !important;
+  }
+
+  .interval-rim-glass-outer {
+    stroke-width: 3.6 !important;
+    opacity: 0.28 !important;
+  }
+
+  .interval-rim-dark-outer {
+    stroke-width: 1.0 !important;
+  }
+
+  .interval-rim-outline-inner {
+    stroke: rgba(235,236,244,0.13) !important;
+  }
+
+  .interval-rim-glass-inner {
+    opacity: 0.14 !important;
+    stroke-width: 2.0 !important;
+  }
+
+  .interval-wedge {
+    stroke: rgba(255,255,255,0.045) !important;
+  }
+}
+
+
+/* === Interval Wedge Active/Inactive Depth Refinement === */
+/* Keep the obsidian material, but make active wedge selection easier to read. */
+
+.interval-wedge {
+  stroke: rgba(0,0,0,0.42) !important;
+  stroke-width: 0.72px !important;
+  filter: brightness(0.96) !important;
+}
+
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.18) !important;
+  stroke-width: 0.9px !important;
+  filter: brightness(1.10) !important;
+}
+
+.interval-wedge.active {
+  stroke: rgba(238,240,248,0.38) !important;
+  stroke-width: 1.08px !important;
+  filter: brightness(1.26) !important;
+}
+
+/* Slightly stronger on small screens for legibility. */
+@media (max-width: 480px) {
+  .interval-wedge {
+    stroke: rgba(0,0,0,0.48) !important;
+    stroke-width: 0.70px !important;
+  }
+
+  .interval-wedge.active {
+    stroke: rgba(245,246,252,0.44) !important;
+    stroke-width: 1.05px !important;
+    filter: brightness(1.30) !important;
+  }
+}
+
+
+/* === Smoked Glass Wheel Field === */
+/* Restores a very subtle internal surface behind notes/spokes without returning to grey stone. */
+.stone-ring {
+  fill: url(#wheelFieldGrad) !important;
+  stroke: rgba(255,255,255,0.095) !important;
+  stroke-width: 1.7 !important;
+  filter: none !important;
+}
+
+/* Slight inner field definition so the wheel reads as an object on the black page. */
+svg#wheel {
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255,255,255,0.018),
+      rgba(255,255,255,0.006) 38%,
+      transparent 68%);
+}
+
+
+/* === Larger Wheel / Tighter Vertical Stage === */
+#mw-container {
+  --wheelSize: min(88vmin, 790px);
+  gap: 10px !important;
+}
+
+#controls {
+  gap: 8px !important;
+}
+
+#key-rows {
+  margin-top: 2px !important;
+}
+
+#mode-controls {
+  margin-top: 8px !important;
+}
+
+@media (max-width: 768px) {
+  svg#wheel {
+    width: 98vw;
+    height: 98vw;
+  }
+
+  #mw-container {
+    gap: 8px !important;
+  }
+
+  #key-rows {
+    margin-top: 0 !important;
+  }
+}
+
+
+/* Spoke visual layers stay behind notes and do not interfere with note/circle reading. */
+.spoke-stack,
+.spoke-underlay,
+.spoke,
+.spoke-highlight,
+.spoke-halo {
+  pointer-events: none !important;
+}
+
+
+/* === Final Vertical Tightening === */
+#mw-container {
+  gap: 6px !important;
+}
+
+#controls {
+  gap: 5px !important;
+}
+
+#key-rows {
+  margin-top: -2px !important;
+}
+
+#mode-controls {
+  margin-top: 6px !important;
+}
+
+@media (max-width: 768px) {
+  #mw-container {
+    gap: 5px !important;
+  }
+
+  #key-rows {
+    margin-top: -3px !important;
+  }
+}
+
+
+/* === Spoke Bleed Masks + Grey Edge Cleanup === */
+/* Opaque dark backplates keep colored spokes from showing through double-band note/center rims. */
+.note-spoke-mask,
+.center-spoke-mask {
+  fill: #050507 !important;
+  stroke: none !important;
+  pointer-events: none;
+}
+
+/* Keep the note rim defined, but remove the stray grey halo at the note-ring edge. */
+.note-rim-outline-outer {
+  stroke: rgba(226,228,236,0.26) !important;
+  stroke-width: 1.0 !important;
+}
+
+.note-rim-glass {
+  opacity: 0.72 !important;
+  stroke-width: 2.0 !important;
+}
+
+.note-rim-outline-inner {
+  stroke: rgba(0,0,0,0.92) !important;
+  stroke-width: 1.18 !important;
+}
+
+/* Center uses same masking/definition as note nodes. */
+.center-rim-outline-outer {
+  stroke: rgba(226,228,236,0.26) !important;
+  stroke-width: 1.0 !important;
+}
+
+.center-rim-glass {
+  opacity: 0.72 !important;
+  stroke-width: 2.0 !important;
+}
+
+.center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.92) !important;
+  stroke-width: 1.18 !important;
+}
+
+/* The main wheel field edge can read as a grey circle after spacing changes; make it quieter. */
+.stone-ring {
+  stroke: rgba(255,255,255,0.055) !important;
+  stroke-width: 1.25 !important;
+}
+
+@media (max-width: 480px) {
+  .note-spoke-mask {
+    r: 32.5;
+  }
+
+  .note-rim-outline-outer,
+  .center-rim-outline-outer {
+    stroke: rgba(235,236,244,0.32) !important;
+  }
+}
+
+
+/* === Readability / Value Structure Pass === */
+/* Adds back a little light and mid-tone structure without returning to grey stone. */
+
+/* Slightly lighter smoked-glass wheel field so notes/spokes are easier to parse. */
+.stone-ring {
+  fill: url(#wheelFieldGrad) !important;
+  stroke: rgba(255,255,255,0.075) !important;
+  stroke-width: 1.2 !important;
+}
+
+/* Calm the label white: less glare, still legible. */
+.note-label,
+.interval-label {
+  fill: rgba(232,235,244,0.92) !important;
+}
+
+.note-label {
+  font-weight: 500;
+}
+
+/* Lift note faces very slightly so they read as a foreground layer. */
+.note-circle {
+  fill: rgba(19,19,25,0.99) !important;
+  stroke: rgba(255,255,255,0.105) !important;
+}
+
+.note-circle:hover {
+  fill: rgba(23,23,30,1) !important;
+  stroke: rgba(255,255,255,0.19) !important;
+}
+
+/* Keep the double rim tactile but less stark than pure bright-on-black. */
+.note-rim-outline-outer,
+.center-rim-outline-outer {
+  stroke: rgba(225,228,238,0.30) !important;
+}
+
+.note-rim-glass,
+.center-rim-glass {
+  opacity: 0.76 !important;
+}
+
+/* Give the interval body a bit more legibility while preserving the obsidian look. */
+.interval-wedge {
+  filter: brightness(1.04) !important;
+  stroke: rgba(0,0,0,0.34) !important;
+}
+
+.interval-wedge:hover {
+  filter: brightness(1.14) !important;
+  stroke: rgba(255,255,255,0.18) !important;
+}
+
+.interval-wedge.active {
+  filter: brightness(1.32) !important;
+  stroke: rgba(238,240,248,0.40) !important;
+  stroke-width: 1.08px !important;
+}
+
+/* Keep the interval outer rim visible but not grey/bulky. */
+.interval-rim-outline-outer {
+  stroke: rgba(235,236,244,0.20) !important;
+}
+
+.interval-rim-glass-outer {
+  opacity: 0.30 !important;
+}
+
+/* Small screens: slightly more contrast for readability. */
+@media (max-width: 480px) {
+  .note-label,
+  .interval-label {
+    fill: rgba(238,240,248,0.95) !important;
+  }
+
+  .note-circle {
+    fill: rgba(21,21,27,1) !important;
+  }
+
+  .interval-wedge.active {
+    filter: brightness(1.36) !important;
+    stroke: rgba(245,246,252,0.46) !important;
+  }
+}
+
+
+/* === stronger active wedges only === */
+.interval-wedge.active {
+  filter: brightness(1.38) !important;
+  stroke: rgba(255,255,255,0.55) !important;
+  stroke-width: 1.2px !important;
+}
+
+
+/* === subtle note shadow === */
+.note-circle, .center {
+  filter: drop-shadow(0 1.5px 2px rgba(0,0,0,0.55));
+}
+
+
+/* === Focused Readability Polish === */
+/* Requested: slightly more wedge separation, slight outer field lift, pure white text,
+   and brighter note-circle bands. */
+
+/* All wheel labels back to pure white for maximum parsing speed. */
+.note-label,
+.interval-label {
+  fill: #ffffff !important;
+}
+
+/* Slight lift to the outer field edge so the wheel does not fall into the black page. */
+.stone-ring {
+  stroke: rgba(255,255,255,0.095) !important;
+  stroke-width: 1.25 !important;
+}
+
+/* Inactive wedge separation: darker cut-lines between adjacent inactive wedges. */
+.interval-wedge {
+  stroke: rgba(0,0,0,0.56) !important;
+  stroke-width: 0.9px !important;
+  filter: brightness(1.03) !important;
+}
+
+/* Hover remains clear but not flashy. */
+.interval-wedge:hover {
+  stroke: rgba(255,255,255,0.22) !important;
+  stroke-width: 1.0px !important;
+  filter: brightness(1.14) !important;
+}
+
+/* Active wedges stay visibly selected. */
+.interval-wedge.active {
+  filter: brightness(1.38) !important;
+  stroke: rgba(255,255,255,0.58) !important;
+  stroke-width: 1.22px !important;
+}
+
+/* Brighter double band around note circles and center hub. */
+.note-rim-outline-outer,
+.center-rim-outline-outer {
+  stroke: rgba(245,247,255,0.42) !important;
+  stroke-width: 1.08px !important;
+}
+
+.note-rim-glass,
+.center-rim-glass {
+  opacity: 0.84 !important;
+  stroke-width: 2.08px !important;
+}
+
+.note-rim-outline-inner,
+.center-rim-outline-inner {
+  stroke: rgba(0,0,0,0.94) !important;
+  stroke-width: 1.2px !important;
+}
+
+/* Keep note faces dark so the brighter band frames them cleanly. */
+.note-circle,
+.center {
+  fill: rgba(18,18,24,0.99) !important;
+  stroke: rgba(255,255,255,0.12) !important;
+}
+
+/* Mobile keeps the same intent but with a tiny contrast bump. */
+@media (max-width: 480px) {
+  .interval-wedge {
+    stroke: rgba(0,0,0,0.62) !important;
+    stroke-width: 0.82px !important;
+  }
+
+  .interval-wedge.active {
+    stroke: rgba(255,255,255,0.66) !important;
+    stroke-width: 1.12px !important;
+  }
+
+  .note-rim-outline-outer,
+  .center-rim-outline-outer {
+    stroke: rgba(250,251,255,0.50) !important;
+  }
+}
+
+
+/* === Restored internal wheel field gradient === */
+svg#wheel {
+  background:
+    radial-gradient(circle at 50% 42%,
+      rgba(255,255,255,0.045) 0%,
+      rgba(255,255,255,0.02) 28%,
+      rgba(255,255,255,0.008) 45%,
+      transparent 65%),
+    radial-gradient(circle at 50% 60%,
+      rgba(0,0,0,0.35),
+      transparent 70%);
+}
+
+
+/* === Typography Pass v2: Keep Wheel Labels Functional, Refine UI Text Only === */
+/* This version intentionally preserves the earlier note-name feel and restores interval-ring legibility. */
+
+/* Restore note labels close to the pre-typography-pass look. */
+.note-label {
+  fill: rgba(255,255,255,0.96) !important;
+  font-family: 'Cardo', serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  stroke: none !important;
+  paint-order: normal !important;
+  text-rendering: auto;
+}
+
+/* Restore interval labels brighter and cleaner than the first typography pass. */
+.interval-label {
+  fill: rgba(255,255,255,0.97) !important;
+  font-family: 'Cardo', serif !important;
+  font-weight: 400 !important;
+  font-size: 15px !important;
+  letter-spacing: 0 !important;
+  stroke: none !important;
+  paint-order: normal !important;
+  text-rendering: auto;
+}
+
+/* Keep the improved mode tile hierarchy only. */
+.mode-tile .key-btn {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+  text-rendering: optimizeLegibility;
+}
+
+.mode-tile .roman-btn {
+  font-weight: 700 !important;
+  font-size: clamp(15px, 1.35vw, 18px) !important;
+  letter-spacing: 0.015em !important;
+  line-height: 1.05 !important;
+  color: rgba(255,255,255,0.98) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.85),
+    0 -1px 0 rgba(255,255,255,0.045) !important;
+}
+
+.mode-tile .key-name {
+  font-weight: 600 !important;
+  font-size: clamp(12px, 1.05vw, 15px) !important;
+  letter-spacing: 0.005em !important;
+  line-height: 1.08 !important;
+  color: rgba(255,255,255,0.91) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.78) !important;
+}
+
+.mode-tile .key-btn.active {
+  color: rgba(255,255,255,1) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.9),
+    0 0 5px rgba(255,255,255,0.14) !important;
+}
+
+/* Control typography: subtle polish, not a readability risk. */
+#mode-controls,
+#controls button,
+#index-input,
+#family-display,
+#mode-display,
+#key-display,
+#notes-display {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+}
+
+.control-label {
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.68) !important;
+}
+
+#family-display,
+#mode-display,
+#key-display,
+#notes-display,
+#index-input {
+  font-weight: 600 !important;
+  letter-spacing: 0.015em !important;
+  color: rgba(255,255,255,0.93) !important;
+}
+
+/* Scale info panel: calm analytical hierarchy. */
+.sip-title {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  letter-spacing: 0.01em !important;
+  color: rgba(255,255,255,0.94) !important;
+}
+
+.sip-spelling-label,
+.sip-label {
+  font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.64) !important;
+}
+
+/* Mobile: only tune tile/control text. Leave SVG labels alone. */
+@media (max-width: 480px) {
+  .interval-label {
+    fill: rgba(255,255,255,1) !important;
+    font-size: 15px !important;
+  }
+
+  .mode-tile .roman-btn {
+    font-size: 0.72rem !important;
+    line-height: 1.0 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.58rem !important;
+    line-height: 1.0 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .control-label {
+    font-size: 11px !important;
+    letter-spacing: 0.035em !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-tile .roman-btn {
+    font-size: 0.68rem !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.54rem !important;
+  }
+}
+
+
+/* === Roman Numeral Correction Pass === */
+/* Removes the experimental floating bars and improves numeral readability directly. */
+
+/* Kill any pseudo-line bar treatment from the previous experiment. */
+.mode-tile .roman-btn::before,
+.mode-tile .roman-btn::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Make Roman numerals larger and more even without relying on bars. */
+.mode-tile .roman-btn {
+  position: relative;
+  font-size: clamp(17px, 1.55vw, 20px) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.018em !important;
+  line-height: 1.05 !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  color: rgba(255,255,255,0.99) !important;
+}
+
+/* If the JS uses lower/upper classes later, this keeps lowercase from visually collapsing. */
+.mode-tile .roman-btn.minor,
+.mode-tile .roman-btn.lowercase {
+  font-size: clamp(17px, 1.55vw, 20px) !important;
+  font-weight: 700 !important;
+}
+
+/* Augmented / diminished symbols: bigger and more anchored.
+   This covers common markup possibilities. */
+.mode-tile .roman-btn sup,
+.mode-tile .roman-btn .quality,
+.mode-tile .roman-btn .chord-quality,
+.mode-tile .roman-btn .modifier {
+  font-size: 0.82em !important;
+  line-height: 0 !important;
+  vertical-align: 0.22em !important;
+  margin-left: 1px !important;
+  opacity: 0.98 !important;
+  font-weight: 700 !important;
+}
+
+/* Mobile: preserve scanability on small screens. */
+@media (max-width: 480px) {
+  .mode-tile .roman-btn {
+    font-size: 0.76rem !important;
+    line-height: 1.02 !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    letter-spacing: 0.005em !important;
+  }
+
+  .mode-tile .roman-btn sup,
+  .mode-tile .roman-btn .quality,
+  .mode-tile .roman-btn .chord-quality,
+  .mode-tile .roman-btn .modifier {
+    font-size: 0.86em !important;
+    vertical-align: 0.18em !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-tile .roman-btn {
+    font-size: 0.72rem !important;
+  }
+}
+
+
+/* === Experimental Mode Tile "Instrument Pad" Pass === */
+/* Visual-only experiment: keeps current tile placement/layout, but makes each tile
+   feel less like nested web buttons and more like a playable two-zone pad. */
+
+.mode-tile {
+  position: relative;
+  overflow: hidden !important;
+  border-radius: 9px !important;
+  padding: 3px !important;
+  gap: 3px !important;
+
+  background:
+    radial-gradient(circle at 50% 12%,
+      color-mix(in srgb, var(--tile-color) 62%, rgba(255,255,255,0.12)),
+      color-mix(in srgb, var(--tile-color) 36%, rgba(0,0,0,0.82)) 42%,
+      rgba(6,6,8,0.98) 120%) !important;
+
+  border: 1px solid rgba(255,255,255,0.16) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -10px 16px rgba(0,0,0,0.42),
+    inset 0 0 0 1px rgba(0,0,0,0.42),
+    0 2px 7px rgba(0,0,0,0.36) !important;
+
+  transition:
+    transform 0.09s ease,
+    filter 0.14s ease,
+    box-shadow 0.14s ease !important;
+}
+
+/* A subtle inner plate sheen so the tile reads as one object. */
+.mode-tile::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 8px;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.10),
+      rgba(255,255,255,0.025) 34%,
+      rgba(0,0,0,0.18) 100%);
+  opacity: 0.72;
+}
+
+/* A fine separator between the chord and scale zones.
+   On the current stacked layout this is horizontal; later desktop side-panel
+   could flip this into a vertical separator. */
+.mode-tile::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255,255,255,0.18),
+      transparent);
+  opacity: 0.62;
+}
+
+/* Hover: less web-scale, more tactile lift. */
+.mode-tile:hover {
+  transform: translateY(-1px) scale(1.012) !important;
+  filter: brightness(1.08) saturate(1.04) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -10px 16px rgba(0,0,0,0.38),
+    inset 0 0 0 1px rgba(0,0,0,0.42),
+    0 4px 10px rgba(0,0,0,0.42) !important;
+}
+
+/* Press: physical compression instead of a web-button glow. */
+.mode-tile:active {
+  transform: translateY(1px) scale(0.985) !important;
+  filter: brightness(0.94) saturate(0.98) !important;
+  box-shadow:
+    inset 0 4px 10px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    0 1px 3px rgba(0,0,0,0.35) !important;
+}
+
+/* Inner actions become zones on the pad, not separate raised buttons. */
+.mode-tile .key-btn {
+  position: relative;
+  z-index: 1;
+  margin: 0 !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255,255,255,0.055) !important;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0.52),
+      rgba(0,0,0,0.72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.055),
+    inset 0 -2px 5px rgba(0,0,0,0.34) !important;
+  transition:
+    background 0.12s ease,
+    transform 0.08s ease,
+    filter 0.12s ease,
+    border-color 0.12s ease !important;
+}
+
+/* Top/chord zone: a bit more punch, but not at the expense of the mode name. */
+.mode-tile .roman-btn {
+  font-size: clamp(17px, 1.5vw, 20px) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.015em !important;
+  color: rgba(255,255,255,0.99) !important;
+}
+
+/* Bottom/scale zone: equally readable, slightly more spacious. */
+.mode-tile .key-name {
+  font-size: clamp(13px, 1.1vw, 16px) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.002em !important;
+  color: rgba(255,255,255,0.95) !important;
+}
+
+/* Directly pressing a zone gives a localized pad response. */
+.mode-tile .key-btn:hover {
+  background:
+    linear-gradient(180deg,
+      rgba(10,10,12,0.56),
+      rgba(0,0,0,0.74)) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  filter: brightness(1.04) !important;
+}
+
+.mode-tile .key-btn:active {
+  transform: translateY(1px) scale(0.985);
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0.72),
+      rgba(0,0,0,0.84)) !important;
+  box-shadow:
+    inset 0 3px 7px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.035) !important;
+}
+
+/* Active state: clearer selected zone without neon bloom. */
+.mode-tile .key-btn.active {
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.16),
+      rgba(255,255,255,0.075)) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -3px 8px rgba(0,0,0,0.30),
+    0 0 5px rgba(255,255,255,0.12) !important;
+}
+
+/* Keep the improved augmented/diminished visibility from the correction pass. */
+.mode-tile .roman-btn sup,
+.mode-tile .roman-btn .quality,
+.mode-tile .roman-btn .chord-quality,
+.mode-tile .roman-btn .modifier {
+  font-size: 0.82em !important;
+  line-height: 0 !important;
+  vertical-align: 0.22em !important;
+  margin-left: 1px !important;
+  opacity: 0.98 !important;
+  font-weight: 700 !important;
+}
+
+/* Mobile: same pad idea, but thinner so it doesn't get chunky. */
+@media (max-width: 480px) {
+  .mode-tile {
+    border-radius: 7px !important;
+    padding: 2px !important;
+    gap: 2px !important;
+  }
+
+  .mode-tile::before {
+    border-radius: 6px;
+    opacity: 0.58;
+  }
+
+  .mode-tile::after {
+    left: 12%;
+    right: 12%;
+    opacity: 0.48;
+  }
+
+  .mode-tile .roman-btn {
+    font-size: 0.76rem !important;
+    line-height: 1.02 !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.60rem !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .mode-tile .key-btn {
+    border-radius: 5px !important;
+    padding: 3px 3px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-tile .roman-btn {
+    font-size: 0.72rem !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: 0.56rem !important;
+  }
+}
+
+
+/* === Mode Tile Color Reinforcement (Spoke Harmony) === */
+/* Restore stronger relationship between tile color and spoke color while keeping pad material */
+
+.mode-tile {
+  background:
+    radial-gradient(circle at 50% 12%,
+      color-mix(in srgb, var(--tile-color) 82%, rgba(255,255,255,0.12)),
+      color-mix(in srgb, var(--tile-color) 58%, rgba(0,0,0,0.62)) 45%,
+      rgba(6,6,8,0.98) 125%) !important;
+
+  border: 1px solid color-mix(in srgb, var(--tile-color) 38%, rgba(255,255,255,0.16)) !important;
+}
+
+
+/* === Desktop: Move Scale Info Panel to Top-Left === */
+/* Built on the user-provided stable color version.
+   Frees the right side for future vertical mode tiles. */
+@media (min-width: 900px) {
+  #scale-info-panel{
+    position: absolute;
+    top: 6px;
+    left: calc(50% - (var(--wheelSize) / 2) - 260px);
+    right: auto !important;
+  }
+}
+
+
+/* === Desktop Mode Tile Side Column === */
+/* Desktop only:
+   - move mode tiles to the right side of the wheel
+   - stack modes vertically
+   - make each tile read horizontally: Roman | Mode Name
+   Mobile/tablet behavior remains unchanged. */
+@media (min-width: 900px) {
+
+  /* Give the wheel row room for the future right-side tile column.
+     The wheel itself remains centered within the overall instrument area. */
+  #mw-toprow {
+    position: relative;
+    width: 100%;
+    min-height: var(--wheelSize);
+  }
+
+  #mw-toprow > #wheel {
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* Pull the key/mode tile area out of the normal below-wheel flow
+     and anchor it to the right of the wheel. */
+  #key-area {
+    position: absolute;
+    z-index: 6;
+    top: 6px;
+    left: calc(50% + (var(--wheelSize) / 2) + 16px);
+
+    width: 230px;
+    max-width: 230px;
+    overflow: visible !important;
+  }
+
+  /* Existing JS may split tiles into .mode-row wrappers.
+     On desktop, make the wrapper stack vertically either way. */
+  #key-rows {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 6px !important;
+  }
+
+  #key-rows .mode-row {
+    display: contents !important;
+  }
+
+  /* Each mode tile becomes one horizontal two-action strip. */
+  .mode-tile {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: center !important;
+    justify-content: stretch !important;
+    column-gap: 8px !important;
+    row-gap: 0 !important;
+
+    padding: 4px 6px !important;
+    min-height: 42px;
+    border-radius: 8px !important;
+  }
+
+  /* Both buttons become zones in a single strip, not stacked buttons. */
+  .mode-tile .key-btn {
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    padding: 5px 7px !important;
+    border-radius: 6px !important;
+    line-height: 1.05 !important;
+    white-space: nowrap;
+  }
+
+  /* Roman numerals share a fixed column with identical left alignment. */
+  .mode-tile .roman-btn {
+    grid-column: 1;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    font-size: clamp(16px, 1.15vw, 19px) !important;
+    letter-spacing: 0.01em !important;
+  }
+
+  /* Mode names share their own fixed-start column. */
+  .mode-tile .key-name {
+    grid-column: 2;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    font-size: clamp(14px, 1.05vw, 17px) !important;
+    letter-spacing: 0.002em !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Very faint divider between function zones: enough to clarify,
+     not enough to make the tile feel like two unrelated buttons. */
+  .mode-tile::after {
+    content: "";
+    position: absolute;
+    left: 54px;
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: rgba(255,255,255,0.105);
+    pointer-events: none;
+    opacity: 0.72;
+  }
+
+  /* Keep the controls from leaving awkward empty space where the tiles used to sit. */
+  #controls {
+    margin-top: 2px !important;
+  }
+}
+
+/* On medium desktop widths, make the column slightly tighter so it does not collide
+   with the page edge or the left analysis panel. */
+@media (min-width: 900px) and (max-width: 1180px) {
+  #key-area {
+    left: calc(50% + (var(--wheelSize) / 2) + 10px);
+    width: 210px;
+    max-width: 210px;
+  }
+
+  .mode-tile {
+    grid-template-columns: 38px minmax(0, 1fr);
+    column-gap: 7px !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .mode-tile::after {
+    left: 48px;
+  }
+
+  .mode-tile .roman-btn {
+    font-size: clamp(15px, 1.05vw, 18px) !important;
+  }
+
+  .mode-tile .key-name {
+    font-size: clamp(13px, 0.95vw, 16px) !important;
+  }
+}
+
+
+/* === Desktop Side Tiles: Force Roman + Mode Name Horizontal === */
+/* Correction: override older stacked/flex rules so each tile reads as:
+   I  Ionian
+   instead of:
+   I
+   Ionian
+*/
+@media (min-width: 900px) {
+  .mode-tile {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+
+    gap: 8px !important;
+    padding: 5px 7px !important;
+    min-height: 40px !important;
+  }
+
+  .mode-tile .key-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+
+    margin: 0 !important;
+    padding: 5px 7px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+  }
+
+  .mode-tile .roman-btn {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+
+  .mode-tile .key-name {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .mode-tile::after {
+    left: 56px !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  .mode-tile {
+    gap: 7px !important;
+  }
+
+  .mode-tile .roman-btn {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+  }
+
+  .mode-tile::after {
+    left: 51px !important;
+  }
+}
+
+
+/* === Desktop Side Tiles: Compact Backing + Equal Mode Buttons === */
+/* Refines the right-side desktop tile column:
+   - colored backing shrinks around the two buttons
+   - roman and mode buttons are centered within fixed columns
+   - all mode-name buttons share the same width
+   - a little more breathing room between Roman numeral and mode name
+   Mobile remains unchanged. */
+@media (min-width: 900px) {
+
+  #key-area {
+    width: 245px !important;
+    max-width: 245px !important;
+  }
+
+  #key-rows {
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .mode-tile {
+    /* shrink colored tile to content instead of filling whole side column */
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    align-self: flex-start !important;
+
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+
+    gap: 12px !important;              /* more space between Roman and mode name */
+    padding: 3px 4px !important;       /* colored backing hugs the buttons */
+    min-height: 0 !important;
+    border-radius: 8px !important;
+    overflow: visible !important;
+  }
+
+  .mode-tile::after {
+    display: none !important;          /* divider no longer needed with tighter backing */
+    content: none !important;
+  }
+
+  .mode-tile .key-btn {
+    margin: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    height: 30px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    text-align: center !important;
+  }
+
+  /* Roman buttons: fixed button size, centered text, same left start for every row. */
+  .mode-tile .roman-btn {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  /* Mode-name buttons: fixed width so Lydian, Ionian, Mixolydian etc. all align. */
+  .mode-tile .key-name {
+    flex: 0 0 122px !important;
+    width: 122px !important;
+    min-width: 122px !important;
+    max-width: 122px !important;
+
+    justify-content: center !important;
+    text-align: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  #key-area {
+    width: 226px !important;
+    max-width: 226px !important;
+  }
+
+  .mode-tile {
+    gap: 10px !important;
+  }
+
+  .mode-tile .roman-btn {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+  }
+
+  .mode-tile .key-name {
+    flex-basis: 116px !important;
+    width: 116px !important;
+    min-width: 116px !important;
+    max-width: 116px !important;
+  }
+}
+
+
+/* === Desktop Side Tiles: Centered Column + Adaptive Name Buttons === */
+/* Refinement:
+   - more space between Roman numeral and mode-name buttons
+   - mode-name buttons can expand for longer names
+   - tile column is centered vertically beside the wheel
+   - column sits a bit farther right
+*/
+@media (min-width: 900px) {
+
+  #key-area {
+    top: 50% !important;
+    transform: translateY(-50%);
+    left: calc(50% + (var(--wheelSize) / 2) + 28px) !important;
+
+    width: max-content !important;
+    max-width: min(300px, calc(100vw - (50% + (var(--wheelSize) / 2) + 40px))) !important;
+  }
+
+  #key-rows {
+    align-items: flex-start !important;
+    width: max-content !important;
+    max-width: 100% !important;
+  }
+
+  .mode-tile {
+    gap: 16px !important;            /* more visual separation: I | Ionian */
+    width: max-content !important;
+    max-width: 100% !important;
+  }
+
+  /* Roman numerals remain a fixed aligned column. */
+  .mode-tile .roman-btn {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+  }
+
+  /* Mode names keep a consistent minimum but can grow for longer names. */
+  .mode-tile .key-name {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 122px !important;
+    max-width: 190px !important;
+
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  #key-area {
+    left: calc(50% + (var(--wheelSize) / 2) + 18px) !important;
+    max-width: min(270px, calc(100vw - (50% + (var(--wheelSize) / 2) + 28px))) !important;
+  }
+
+  .mode-tile {
+    gap: 13px !important;
+  }
+
+  .mode-tile .roman-btn {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+  }
+
+  .mode-tile .key-name {
+    min-width: 116px !important;
+    max-width: 174px !important;
+  }
+}
+
+
+/* === Desktop Side Tiles: Dynamic Equal Name Width without Breaking Tile Color === */
+/* Restores colored tile wrappers and lets JS set --modeNameButtonW to the longest visible mode name. */
+@media (min-width: 900px) {
+  #key-area {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    left: calc(50% + (var(--wheelSize) / 2) + 28px) !important;
+
+    width: max-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  #key-rows {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 6px !important;
+
+    width: max-content !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #key-rows .mode-row {
+    display: contents !important;
+  }
+
+  .mode-tile {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+
+    width: max-content !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    gap: 16px !important;
+    padding: 3px 4px !important;
+    min-height: 0 !important;
+    border-radius: 8px !important;
+    overflow: visible !important;
+  }
+
+  .mode-tile::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .mode-tile .key-btn {
+    margin: 0 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    height: 30px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    text-align: center !important;
+  }
+
+  .mode-tile .roman-btn {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .mode-tile .key-name {
+    flex: 0 0 var(--modeNameButtonW, auto) !important;
+    width: var(--modeNameButtonW, auto) !important;
+    min-width: var(--modeNameButtonW, 122px) !important;
+    max-width: none !important;
+
+    justify-content: center !important;
+    text-align: center !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  #key-area {
+    left: calc(50% + (var(--wheelSize) / 2) + 18px) !important;
+  }
+
+  .mode-tile {
+    gap: 13px !important;
+  }
+
+  .mode-tile .roman-btn {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+  }
+}
+
+
+/* === Desktop Mode Column Header + Pitch-Prefixed Mode Names === */
+/* Desktop-only additions:
+   - Adds "Modes of / Family" header above right-side mode column.
+   - Shows spelled mode roots before mode names on desktop, e.g. C Ionian.
+   - Mobile keeps the compact mode-name-only labels. */
+
+#mode-family-header {
+  display: none;
+}
+
+.mode-root-label {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  #mode-family-header {
+    display: block;
+    width: 100%;
+    margin: 0 0 9px 0;
+    text-align: center;
+    user-select: none;
+  }
+
+  .mode-family-header-kicker {
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 12px;
     line-height: 1;
-    padding-top: 1px;
-    padding-bottom: 1px;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.64);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.75);
+  }
+
+  .mode-family-header-name {
+    margin-top: 4px;
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: clamp(16px, 1.25vw, 20px);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: 0.015em;
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.85);
+    white-space: nowrap;
+  }
+
+  .mode-root-label {
+    display: inline;
+    margin-right: 0.38em;
+  }
+
+  .mode-name-label {
+    display: inline;
+  }
+
+  /* Let the dynamic width helper measure the full "C Ionian" desktop label. */
+  .mode-tile .key-name {
+    gap: 0 !important;
+  }
+}
+
+@media (max-width: 899px) {
+  #mode-family-header {
+    display: none !important;
+  }
+
+  .mode-root-label {
+    display: none !important;
+  }
+
+  .mode-name-label {
+    display: inline;
+  }
+}
+
+
+/* === Mode Family Header Legibility Tweak === */
+@media (min-width: 900px) {
+  .mode-family-header-kicker {
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.08em !important;
+    color: rgba(255,255,255,0.82) !important;
+  }
+}
+
+
+/* === Spelling Drawer Header: Key + Mode Controls === */
+/* Desktop control-consolidation phase:
+   The spelling drawer title becomes two compact dials:
+   ‹ C ›   ‹ Ionian ›
+   Mobile keeps the existing panel hidden. */
+
+@media (min-width: 900px) {
+  .sip-title {
+    width: 100%;
+  }
+
+  #sip-title {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .sip-title-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+
+    min-width: 0;
+    padding: 2px 4px;
+    border-radius: 9px;
+    background: rgba(0,0,0,0.16);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -2px 6px rgba(0,0,0,0.30);
+  }
+
+  .sip-key-control {
+    flex: 0 0 auto;
+  }
+
+  .sip-mode-control {
+    flex: 1 1 auto;
+    min-width: 92px;
+  }
+
+  .sip-title-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 30px;
+    padding: 0 3px;
+
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.85);
+    white-space: nowrap;
+  }
+
+  .sip-mode-control .sip-title-value {
+    min-width: 66px;
+  }
+
+  .sip-title-arrow {
+    width: 18px;
+    height: 22px;
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255,255,255,0.76);
+
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+
+    cursor: pointer;
+    box-shadow: none;
+  }
+
+  .sip-title-arrow:hover {
+    color: rgba(255,255,255,0.98);
+    background: rgba(255,255,255,0.065);
+  }
+
+  .sip-title-arrow:active {
+    transform: translateY(1px);
+    color: rgba(255,255,255,1);
+    background: rgba(0,0,0,0.22);
+  }
+
+  /* Hide the redundant bottom Key and Mode controls on desktop only.
+     The code remains in place; the new spelling-drawer dials now perform this role. */
+  #mode-controls .control-group:has(#key-display),
+  #mode-controls .control-group:has(#mode-display) {
+    display: none !important;
+  }
+}
+
+/* Fallback if :has is unavailable: add no visual change rather than risking layout bugs. */
+
+
+/* === Spelling Drawer Header Flex Fix === */
+/* Keep the drawer itself a fixed size, but allow the key/mode control strip
+   at the top to expand naturally for longer mode names. */
+@media (min-width: 900px) {
+  #scale-info-panel {
+    overflow: visible !important;
+  }
+
+  .sip-header {
+    overflow: visible !important;
+    align-items: center !important;
+  }
+
+  .sip-title {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  #sip-title {
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+  }
+
+  .sip-title-control {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+
+  .sip-key-control {
+    min-width: max-content !important;
+  }
+
+  .sip-mode-control {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .sip-title-value {
+    min-width: max-content !important;
+    width: auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+
+  .sip-mode-control .sip-title-value {
+    min-width: max-content !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  /* Keep the drawer toggle attached to the fixed drawer edge instead of being
+     pushed around by the expanding key/mode controls. */
+  #sip-toggle {
+    flex: 0 0 26px !important;
+    margin-left: 8px !important;
+  }
+}
+
+
+/* === Spelling Drawer Header Panhandle Box === */
+/* The drawer body stays fixed-size, but the header frame expands as needed
+   so the Key/Mode controls and open/close button always sit inside one box. */
+@media (min-width: 900px) {
+  #scale-info-panel {
+    overflow: visible !important;
+  }
+
+  .sip-header {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+
+    padding: 5px 6px !important;
+    margin: -5px -6px 0 -6px !important;
+
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    background:
+      linear-gradient(180deg,
+        rgba(255,255,255,0.045),
+        rgba(0,0,0,0.18)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.065),
+      inset 0 -4px 10px rgba(0,0,0,0.28),
+      0 2px 8px rgba(0,0,0,0.20) !important;
+
+    overflow: visible !important;
+  }
+
+  .sip-title {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  #sip-title {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+
+    overflow: visible !important;
+  }
+
+  .sip-title-control {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+
+  .sip-mode-control {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
+  }
+
+  .sip-title-value,
+  .sip-mode-control .sip-title-value {
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+
+  #sip-toggle {
+    flex: 0 0 26px !important;
+    width: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    margin-left: 0 !important;
+  }
+
+  #sip-body {
+    margin-top: 12px !important;
+  }
+}
+
+
+/* === Spelling Drawer Frame Conflict Fix === */
+/* Closed state: only the key/mode control header is visibly boxed.
+   Open state: the drawer body appears as the framed panel below it.
+   This prevents the old drawer box from overlapping the key/mode controls. */
+
+@media (min-width: 900px) {
+  /* The outer container becomes only a positioning shell. */
+  #scale-info-panel {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Header is the only visible box when closed. */
+  .sip-header {
+    position: relative !important;
+    z-index: 2 !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+
+    padding: 6px 7px !important;
+    margin: 0 !important;
+
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    background:
+      linear-gradient(180deg,
+        rgba(255,255,255,0.055),
+        rgba(0,0,0,0.22)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.075),
+      inset 0 -4px 10px rgba(0,0,0,0.30),
+      0 2px 8px rgba(0,0,0,0.24) !important;
+
+    overflow: visible !important;
+  }
+
+  /* Body is invisible/removed when closed. */
+  #sip-body[hidden] {
+    display: none !important;
+  }
+
+  /* When open, the drawer body gets the drawer frame instead of the outer panel. */
+  #sip-body:not([hidden]) {
+    position: relative !important;
+    z-index: 1 !important;
+
+    display: grid !important;
+    gap: 12px !important;
+
+    width: 260px !important;
+    max-width: 260px !important;
+
+    margin-top: 8px !important;
+    padding: 12px !important;
+
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.16) !important;
+    background: rgba(0,0,0,0.18) !important;
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.045),
+      0 2px 8px rgba(0,0,0,0.18) !important;
+  }
+
+  /* Slight visual link between header and open drawer body without creating overlap. */
+  #scale-info-panel:has(#sip-body:not([hidden])) .sip-header {
+    border-color: rgba(255,255,255,0.18) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.085),
+      inset 0 -4px 10px rgba(0,0,0,0.28),
+      0 2px 8px rgba(0,0,0,0.18) !important;
+  }
+
+  /* Keep the key/mode controls self-sizing inside the header. */
+  .sip-title,
+  #sip-title,
+  .sip-title-control,
+  .sip-mode-control,
+  .sip-title-value,
+  .sip-mode-control .sip-title-value {
+    width: auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  #sip-title {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  #sip-toggle {
+    flex: 0 0 26px !important;
+    width: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    margin-left: 0 !important;
+  }
+}
+
+
+/* === Remove Click Focus Bubble Inside Mode Wheel === */
+/* The global site CSS adds focus outlines to all buttons.
+   Inside the Mode Wheel, those outlines create lingering visual noise after clicks,
+   especially on mode tiles and drawer arrows. */
+
+#mw-app button:focus,
+#mw-app button:focus-visible,
+#mw-app .key-btn:focus,
+#mw-app .key-btn:focus-visible,
+#mw-app .sip-title-arrow:focus,
+#mw-app .sip-title-arrow:focus-visible,
+#mw-app .sip-btn:focus,
+#mw-app .sip-btn:focus-visible,
+#mw-app #sip-toggle:focus,
+#mw-app #sip-toggle:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+/* Inputs keep a restrained internal focus state instead of an outer bubble. */
+#mw-app input:focus,
+#mw-app input:focus-visible {
+  outline: none !important;
+  border-color: rgba(255,255,255,0.32) !important;
+  box-shadow:
+    inset 0 0 6px rgba(255,255,255,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.045) !important;
+}
+
+/* === Active Mode Header + Simplified Left Panel === */
+/* The right-side header now names the mode currently in root position:
+   Modes of / C Major, D Dorian, A Natural Minor, etc.
+   The top-left drawer returns to a simple Spelling drawer, with placeholder instructions above it. */
+
+@media (min-width: 900px) {
+  /* Top-left placeholder instructions. Same general voice/size as the Modes of kicker. */
+  #mw-instructions {
+    position: absolute;
+    z-index: 5;
+    top: 6px;
+    left: calc(50% - (var(--wheelSize) / 2) - 260px);
+    width: 260px;
+
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.18;
+    letter-spacing: 0.045em;
+    color: rgba(255,255,255,0.82);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.82);
+    text-align: left;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Move the spelling drawer beneath the instructions. */
+  #scale-info-panel {
+    top: 48px !important;
+    left: calc(50% - (var(--wheelSize) / 2) - 260px) !important;
+  }
+
+  /* Remove the old key/mode control surface from the spelling drawer. */
+  .sip-title {
+    display: none !important;
+  }
+
+  /* Keep the drawer header as a compact framed label + open/close button. */
+  .sip-header {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+
+    width: 148px !important;
+    min-width: 148px !important;
+    max-width: 148px !important;
+
+    padding: 6px 7px !important;
+    margin: 0 !important;
+
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    background:
+      linear-gradient(180deg,
+        rgba(255,255,255,0.055),
+        rgba(0,0,0,0.22)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.075),
+      inset 0 -4px 10px rgba(0,0,0,0.30),
+      0 2px 8px rgba(0,0,0,0.24) !important;
+  }
+
+  .sip-header::before {
+    content: "Spelling";
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.025em;
+    color: rgba(255,255,255,0.88);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.82);
+    white-space: nowrap;
+  }
+
+  #sip-toggle {
+    flex: 0 0 26px !important;
+    width: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    margin-left: 0 !important;
+  }
+
+  /* Body remains the visible drawer frame when open. */
+  #sip-body:not([hidden]) {
+    width: 260px !important;
+    max-width: 260px !important;
+    margin-top: 8px !important;
+  }
+}
+
+@media (max-width: 899px) {
+  #mw-instructions {
+    display: none !important;
+  }
+}
+
+
+/* === Instructions + Spelling Drawer Cleanup === */
+/* Instructions match the "Modes of" kicker typography.
+   Spelling returns to one regular drawer: the header/name is part of the same panel,
+   no panhandle/dual-frame behavior. */
+
+@media (min-width: 900px) {
+  #mw-instructions {
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: rgba(255,255,255,0.82) !important;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.75) !important;
+  }
+
+  /* Restore the scale info panel as a normal single drawer frame. */
+  #scale-info-panel {
+    position: absolute;
+    z-index: 5;
+    top: 6px;
+    left: calc(50% - (var(--wheelSize) / 2) - 260px);
+    right: auto !important;
+
+    width: 260px !important;
+    max-width: 34vw !important;
+    padding: 12px 12px 10px 12px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    background: rgba(0,0,0,0.18) !important;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35) !important;
+    overflow: visible !important;
+    user-select: none;
+  }
+
+  /* Header is no longer a separate/panhandle box. */
+  .sip-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* Hide old key/mode title-control content if present. */
+  #sip-title {
+    display: none !important;
+  }
+
+  .sip-title {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  /* Spelling label becomes the drawer name inside the normal menu. */
+  .sip-header::before {
+    content: "Spelling";
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    color: rgba(255,255,255,0.94);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.85);
+    white-space: nowrap;
+  }
+
+  #sip-toggle {
+    flex: 0 0 26px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    margin-left: auto !important;
+  }
+
+  #sip-body {
+    margin-top: 10px !important;
+  }
+
+  #sip-body:not([hidden]) {
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+
+/* === Number of Notes Bubble: isolated proof-of-concept === */
+/* Desktop only. Keeps old controls visible for now. */
+@media (min-width: 900px) {
+  #left-control-stack {
+    position: absolute;
+    z-index: 5;
+    top: 6px;
+    left: calc(50% - (var(--wheelSize) / 2) - 260px);
+
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  #left-control-stack > #scale-info-panel {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+
+    width: 260px !important;
+    max-width: 260px !important;
+    margin: 0 !important;
+  }
+
+  .left-menu-bubble {
+    width: 260px;
+    min-height: 48px;
+    padding: 10px 12px;
+
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.18);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+    user-select: none;
+  }
+
+  .left-bubble-label {
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.78);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.75);
+  }
+
+  .left-dial-row {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    margin-top: 7px;
+  }
+
+  .left-dial-arrow {
+    width: 24px;
+    height: 26px;
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 7px;
+    background: rgba(0,0,0,0.18);
+    color: rgba(255,255,255,0.84);
+
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.055),
+      inset 0 -2px 6px rgba(0,0,0,0.28);
+  }
+
+  .left-dial-arrow:hover {
+    color: rgba(255,255,255,0.98);
+    border-color: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.055);
+  }
+
+  .left-dial-arrow:active {
+    transform: translateY(1px);
+    background: rgba(0,0,0,0.28);
+  }
+
+  .left-dial-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 46px;
+    min-height: 28px;
+    padding: 4px 10px;
+    border-radius: 8px;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.045),
+      inset 0 -2px 6px rgba(0,0,0,0.28);
+
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    color: rgba(255,255,255,0.94);
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 899px) {
+  #left-control-stack {
+    position: static;
+  }
+}
+
+
+
+/* === Adjust top spacing to avoid overlap with instructions === */
+@media (min-width: 900px) {
+  /* Push the whole left stack down below the instructions */
+  #left-control-stack {
+    top: 42px !important; /* adjust if you want more/less space */
+  }
+
+  /* Ensure instructions have breathing room */
+  #mw-instructions {
+    top: 10px !important;
+  }
+}
+
+
+/* === Mode Family Bubble: isolated addition === */
+@media (min-width: 900px) {
+  .family-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  #family-panel-toggle {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.20);
+    background: rgba(0,0,0,0.18);
+    color: rgba(255,255,255,0.92);
+
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.055),
+      inset 0 -2px 6px rgba(0,0,0,0.28);
+  }
+
+  #family-panel-toggle:hover {
+    border-color: rgba(255,255,255,0.28);
+    background: rgba(255,255,255,0.055);
+  }
+
+  #family-panel-toggle:active {
+    transform: translateY(1px);
+    background: rgba(0,0,0,0.28);
+  }
+
+  .family-value {
+    min-width: 148px;
+    max-width: 214px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #family-panel-body {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+  }
+
+  #family-panel-body[hidden] {
+    display: none !important;
+  }
+
+  .family-hist-label {
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.78);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.75);
+  }
+
+  #family-hist-target {
+    min-height: 8px;
+  }
+}
+
+
+/* === Histogram now lives in Mode Family drawer === */
+@media (min-width: 900px) {
+  /* Hide the old spelling-section wrapper if it becomes empty after the histogram moves. */
+  #scale-info-panel .sip-section:has(#sip-hist) {
+    display: none !important;
+  }
+
+  /* When moved into the family drawer, make histogram spacing match that bubble. */
+  #family-hist-target .sip-hist {
+    margin-top: 2px;
+  }
+
+  #family-hist-target .sip-row {
+    grid-template-columns: 64px 26px 1fr;
+  }
+}
+
+
+/* === Spelling Drawer Label Cleanup === */
+/* Keep the drawer header "Spelling", remove duplicate inner labels and leftover histogram text. */
+@media (min-width: 900px) {
+  /* Hide the inner "Spelling" row label inside the spelling drawer.
+     The drawer header already provides this label. */
+  #scale-info-panel .sip-spelling-label {
+    display: none !important;
+  }
+
+  /* Hide any leftover interval-class histogram label/section in the spelling drawer
+     now that the histogram lives in the Mode Family drawer. */
+  #scale-info-panel .sip-section:has(#sip-hist),
+  #scale-info-panel .sip-label:has(+ #sip-hist),
+  #scale-info-panel .sip-label:has(+ .sip-hist) {
+    display: none !important;
+  }
+}
+
+
+/* === Index / Reset Bubble === */
+@media (min-width: 900px) {
+  .index-bubble {
+    min-height: 0;
+  }
+
+  .index-inline-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 7px;
+  }
+
+  .index-inline-row #index-input {
+    width: 100px !important;
+    height: 30px !important;
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+    font-size: 15px !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.015em !important;
+    color: rgba(255,255,255,0.94) !important;
+
+    border-radius: 8px !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    background: rgba(0,0,0,0.22) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.045),
+      inset 0 -2px 6px rgba(0,0,0,0.28) !important;
+  }
+
+  .index-inline-row #reset-wheel {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border: 1px solid rgba(255,255,255,0.16) !important;
+    background: rgba(0,0,0,0.18) !important;
+    color: rgba(255,255,255,0.88) !important;
+
+    font-size: 17px !important;
+    line-height: 1 !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.055),
+      inset 0 -2px 6px rgba(0,0,0,0.28) !important;
+  }
+
+  .index-inline-row #reset-wheel:hover {
+    color: rgba(255,255,255,1) !important;
+    border-color: rgba(255,255,255,0.25) !important;
+    background: rgba(255,255,255,0.055) !important;
+  }
+
+  .index-inline-row #reset-wheel:active {
+    transform: translateY(1px);
+    background: rgba(0,0,0,0.28) !important;
+  }
+}
+
+
+/* === Compact Index Bubble (desktop) === */
+@media (min-width: 900px) {
+  .index-bubble {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+    padding: 8px 12px !important;
+    min-height: 0 !important;
+  }
+
+  .index-bubble .left-bubble-label {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .index-inline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 !important;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+
+  .index-inline-row #index-input {
+    height: 28px !important;
+  }
+
+  .index-inline-row #reset-wheel {
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+}
+
+
+/* === Compact Inline Bubbles: Number of Notes + Index === */
+@media (min-width: 900px) {
+  /* Number of Notes becomes one line: # of Notes  ‹ 7 › */
+  .note-count-bubble {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+    padding: 8px 12px !important;
+    min-height: 0 !important;
+  }
+
+  .note-count-bubble .left-bubble-label {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .note-count-bubble .left-bubble-label {
+    font-size: 0 !important; /* replace long label text visually */
+  }
+
+  .note-count-bubble .left-bubble-label::before {
+    content: "# of Notes";
+    font-size: 12px !important;
+  }
+
+  .note-count-bubble .left-dial-row {
+    margin: 0 !important;
+    flex: 1 1 auto;
+
+    display: grid !important;
+    grid-template-columns: 24px minmax(42px, auto) 24px;
+    align-items: center;
+    justify-content: end;
+    column-gap: 8px;
+  }
+
+  .note-count-bubble .left-dial-arrow {
+    width: 24px !important;
+    height: 28px !important;
+  }
+
+  .note-count-bubble .left-dial-value {
+    min-height: 28px !important;
+    min-width: 44px !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+  }
+
+  /* Index row: label, input, reset feel evenly spaced and vertically centered. */
+  .index-bubble {
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 12px;
+
+    padding: 8px 12px !important;
+    min-height: 0 !important;
+  }
+
+  .index-bubble .left-bubble-label {
+    margin: 0;
+    justify-self: start;
+  }
+
+  .index-inline-row {
+    margin: 0 !important;
+    justify-self: end;
+
+    display: grid !important;
+    grid-template-columns: 100px 30px;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .index-inline-row #index-input {
+    width: 100px !important;
+    height: 28px !important;
+  }
+
+  .index-inline-row #reset-wheel {
+    width: 30px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+}
+
+
+
+/* === Spelling Drawer Typography + Cleanup === */
+@media (min-width: 900px) {
+
+  /* Match Spelling header to other menu headers */
+  .sip-header::before {
+    font-family: "Cormorant Garamond", Garamond, "Palatino Linotype", Palatino, serif !important;
+    font-size: 12px !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.075em !important;
+    text-transform: uppercase !important;
+    color: rgba(255,255,255,0.78) !important;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.75) !important;
+  }
+
+  /* Remove any remaining histogram label artifacts inside spelling drawer */
+  #scale-info-panel .sip-label {
+    display: none !important;
+  }
+
+}
+
+/* === Hide legacy bottom controls (desktop) === */
+@media (min-width: 900px) {
+  /* Hide entire old control bar */
+  #mode-controls {
+    display: none !important;
+  }
+
+  /* Extra safety: hide any lingering control groups */
+  .control-group {
+    display: none !important;
+  }
+
+  /* Hide old index label if it still exists anywhere */
+  label[for="index-input"],
+  .control-group label:has(+ #index-input) {
+    display: none !important;
+  }
+}
+/* =========================================================
+   MODEWHEEL DESKTOP VIEWPORT LOCK V3 — wheel sizing only
+   Safari-safe scope: body.modewheel-page is added by wheel.js.
+   Mobile/tablet keeps existing scroll behavior.
+   ========================================================= */
+
+@media (min-width: 900px) {
+  body.modewheel-page #mw-container {
+    /*
+      Preserve existing layout model:
+      - left stack keys off --wheelSize
+      - mode tiles key off --wheelSize
+      Only make the shared anchor viewport-aware.
+    */
+    --wheelSize: clamp(620px, min(88dvh, 56vw), 920px) !important;
+    max-width: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body.modewheel-page svg#wheel {
+    width: var(--wheelSize) !important;
+    height: var(--wheelSize) !important;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 760px) {
+  body.modewheel-page #mw-container {
+    --wheelSize: clamp(560px, min(84dvh, 52vw), 820px) !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  body.modewheel-page #mw-container {
+    --wheelSize: clamp(440px, min(74dvh, 42vw), 680px) !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1040px) {
+  body.modewheel-page #mw-container {
+    --wheelSize: clamp(500px, min(80dvh, 48vw), 740px) !important;
+  }
+}
+
+/* Explicit mobile/tablet safeguard: no lock and no forced wheel sizing below desktop. */
+@media (max-width: 899px) {
+  body.modewheel-page #mw-container {
+    max-width: 1100px;
+  }
+}
+/* =========================================================
+   LEFT STACK VERTICAL CENTERING V6
+   ---------------------------------------------------------
+   Keeps the left control stack vertically centered against the
+   wheel/stage. Because the stack is translated by its own height,
+   it naturally re-centers as drawers open and close.
+   Desktop only; mobile remains unchanged.
+   ========================================================= */
+
+@media (min-width: 900px) {
+  body.modewheel-page #left-control-stack {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+
+  body.modewheel-page #left-control-stack {
+    transition:
+      top 0.18s ease,
+      transform 0.18s ease;
+  }
+}
+
+@media (max-width: 899px) {
+  body.modewheel-page #left-control-stack {
+    transform: none !important;
+  }
+}
+/* =========================================================
+   LEFT STACK INSTRUCTIONS INTEGRATION V7
+   ---------------------------------------------------------
+   Treats the instructions as the first item in the centered
+   left control stack rather than a separate top-left overlay.
+   ========================================================= */
+
+@media (min-width: 900px) {
+  body.modewheel-page #left-control-stack > #mw-instructions {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+
+    order: -10;
+    width: 260px !important;
+    margin: 0 0 2px 0 !important;
+    padding: 0 2px !important;
+
+    text-align: center !important;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  body.modewheel-page #left-control-stack {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    align-items: stretch !important;
+  }
+}
+
+@media (max-width: 899px) {
+  body.modewheel-page #mw-instructions {
+    display: none !important;
   }
 }
