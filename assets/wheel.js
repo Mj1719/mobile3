@@ -5141,6 +5141,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
   updateNoteLabelOrientation();
+  setTimeout(() => {
+    if (typeof updateWheelNoteLabelsFromSpelling === 'function') {
+      updateWheelNoteLabelsFromSpelling();
+    }
+  }, 0);
 
   // Tandem rotation: dragging at note/spoke intersections rotates BOTH rings together
   handleRotGroup.querySelectorAll('circle.dual-rotate-handle').forEach(h=>{
@@ -5201,6 +5206,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     label.setAttribute('text-anchor','middle');
     label.setAttribute('dominant-baseline','middle');
     label.setAttribute('class','interval-label');
+    label.dataset.idx = i;
     label.textContent=INTERVALS[i];
     label.setAttribute('transform',`rotate(15 ${tx} ${ty})`);
     outerBtnsG.appendChild(label);
@@ -5291,6 +5297,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     intervalButtons.forEach((btn,idx)=>{
       btn.classList.toggle('active', sel.has(idx));
     });
+    updateIntervalRingLabels();
     renderKey(sel);
     reflectIndexUIFromCurrentSelection(sel); // keep panel synced
   }
@@ -5490,7 +5497,7 @@ function ensureModeFamilyHeader() {
   if (topRow && !document.getElementById('mw-instructions')) {
     const instructions = document.createElement('div');
     instructions.id = 'mw-instructions';
-    instructions.innerHTML = '<div>Rotate wheel to explore</div><div>Tap modes to hear</div>';
+    instructions.innerHTML = '<div>Adjust wheel to select scale</div><div>Tap modes to listen</div>';
     topRow.appendChild(instructions);
   }
 
@@ -5499,9 +5506,13 @@ function ensureModeFamilyHeader() {
 
 function updateModeTileDesktopLabels(sel, detectedInfo) {
   const header = ensureModeFamilyHeader();
-  const detected = detectedInfo || detectModeFamilyAndIndex(sel);
+  const selected = sel || getSelectedIntervals();
+  const detected = detectedInfo || detectModeFamilyAndIndex(selected);
 
-  const rels = Array.from(sel || getSelectedIntervals()).sort((a, b) => a - b);
+  const rels = Array.from(selected).sort((a, b) => a - b);
+  const familyData = MODE_FAMILIES[detected?.family] || null;
+  const familyNames = Array.isArray(familyData?.names) ? familyData.names : [];
+  const detectedIndex = Number.isFinite(detected?.index) ? detected.index : -1;
 
   let spelled = [];
   try {
@@ -5513,14 +5524,50 @@ function updateModeTileDesktopLabels(sel, detectedInfo) {
   let activeRootName = '';
   let activeModeName = '';
 
-  const nameButtons = Array.from(document.querySelectorAll('#key-area .mode-tile .key-name'));
-  nameButtons.forEach((btn, idx) => {
-    const modeName = btn.dataset.modeName || btn.textContent.trim() || `Mode ${idx + 1}`;
+  /*
+    Live visual sync for desktop mode tiles.
+
+    renderKey() rebuilds these on release. During drag, however, we want the
+    existing tiles to behave like a live instrument display:
+      - Roman numerals follow the currently approached mode.
+      - Tile colors follow the current spoke/color position.
+      - Mode names/root labels update without waiting for pointerup.
+  */
+  const tiles = Array.from(document.querySelectorAll('#key-area .mode-tile'));
+
+  tiles.forEach((tile, idx) => {
+    const deg = rels[idx] ?? 0;
+
+    // Tile color: use the live color position while dragging.
+    const tileColor = getRotatedColor(deg);
+    tile.style.setProperty('--tile-color', tileColor);
+    tile.style.background = `radial-gradient(circle at 50% 22%, ${tileColor} 0%, ${tileColor} 38%, rgba(8,8,10,0.96) 132%)`;
+
+    // Roman numeral: recompute from the current live modal ordering.
+    const romanBtn = tile.querySelector('.roman-btn');
+    if (romanBtn) {
+      romanBtn.textContent = chordSymbolFromDegree(rels, idx);
+    }
+
+    const btn = tile.querySelector('.key-name');
+    if (!btn) return;
+
+    /*
+      Recompute the mode name on every live update.
+      Previously this reused btn.dataset.modeName, which was only refreshed by renderKey().
+      During dragging, renderKey() does not always run, so the first mode/header,
+      Roman numerals, and tile colors could lag until pointerup.
+    */
+    const modeName = (detectedIndex >= 0 && familyNames.length)
+      ? familyNames[(detectedIndex + idx) % familyNames.length]
+      : (btn.dataset.modeName || `Mode ${idx + 1}`);
+
+    btn.dataset.modeName = modeName;
+
     let rootName = spelled[idx];
 
     // Fallback if the current spelling mode cannot produce a clean label.
     if (!rootName || rootName === 'Spelling unavailable') {
-      const deg = rels[idx] ?? 0;
       rootName = pickNeutralName((state.rootIndex + deg) % 12);
     }
 
@@ -5572,6 +5619,9 @@ let lastAngle = 0;
 let tempColorRotation = 0;
 let startGroupRotation = 0;
 let startNoteRotation = 0; // for tandem (notes + colors together)
+let startTandemRootIndex = 0;
+let startTandemColorStep = 0;
+let lastTandemLiveColorStep = null; // spelling updates only when nearest active spoke/mode changes
 let suppressVisualUpdate = false;
 
 // Helper to get the current pointer angle
@@ -5602,6 +5652,13 @@ function startTandemDrag(e){
   tempColorRotation = 0;
   startGroupRotation = state.colorRot || 0;
   startNoteRotation = state.noteRot || 0;
+
+  // Tandem drag is modal, not chromatic:
+  // remember the starting displayed root and starting nearest active spoke.
+  startTandemRootIndex = ((state.rootIndex % 12) + 12) % 12;
+  startTandemColorStep = topColorIndexLive();
+  lastTandemLiveColorStep = startTandemColorStep;
+
   lastAngle = getAngleFromEvent(e);
 
   try { (e.currentTarget && e.currentTarget.setPointerCapture) ? e.currentTarget.setPointerCapture(e.pointerId) : svg.setPointerCapture(e.pointerId); } catch (_) {}
@@ -5766,10 +5823,13 @@ window.addEventListener('pointermove', (e) => {
     handleRotGroup.setAttribute('transform', `rotate(${visualRotation})`);
     state.colorRot = visualRotation;
 
-    // Live-update the mode controls as the color ring passes each nearest active spoke.
-    // Without this, the mode box waits until pointerup/snap to refresh.
+    // Live-update the mode controls and right-side mode tiles as the color ring
+    // passes each nearest active spoke. This keeps mode names, Roman numerals,
+    // and tile colors from waiting until pointerup/snap.
     state.colorStep = topColorIndexLive();
-    reflectIndexUIFromCurrentSelection(getSelectedIntervals());
+    const liveSel = getSelectedIntervals();
+    reflectIndexUIFromCurrentSelection(liveSel);
+    updateModeTileDesktopLabels(liveSel);
     updateScaleInfoPanel();
   }
 
@@ -5785,12 +5845,25 @@ window.addEventListener('pointermove', (e) => {
     state.colorRot = visualRotation;
     updateNoteLabelOrientation();
 
-    // Live-update key / mode / index while dragging.
-    // Key and mode must both be derived from the current visual positions before updating labels.
-    state.rootIndex = ((Math.round((-state.noteRot) / 30) % 12) + 12) % 12;
-    state.colorStep = topColorIndexLive();
-    updateKeyDisplay();
-    reflectIndexUIFromCurrentSelection(getSelectedIntervals());
+    // Live-update mode/index from the nearest active spoke.
+    // Do NOT update spelling from every chromatic note crossing during tandem drag.
+    // Instead, derive the displayed root from the starting root plus movement
+    // through selected relative-mode spokes. This is direction-independent.
+    const liveColorStep = topColorIndexLive();
+    state.colorStep = liveColorStep;
+
+    if (liveColorStep !== lastTandemLiveColorStep) {
+      lastTandemLiveColorStep = liveColorStep;
+
+      const modalDelta = ((liveColorStep - startTandemColorStep) % 12 + 12) % 12;
+      state.rootIndex = (startTandemRootIndex + modalDelta) % 12;
+
+      updateKeyDisplay();
+    }
+
+    const liveSel = getSelectedIntervals();
+    reflectIndexUIFromCurrentSelection(liveSel);
+    updateModeTileDesktopLabels(liveSel);
     updateScaleInfoPanel();
   }
 }, { passive: false });
@@ -5920,6 +5993,7 @@ function endPointerDrag() {
 
   suppressVisualUpdate = false;
   dragging = null;
+  lastTandemLiveColorStep = null;
 }
 
 window.addEventListener('pointerup', endPointerDrag, { passive: true });
@@ -6393,6 +6467,76 @@ function playModeFromDegree(i) {
     return intervals.map(iv => pickNeutralName((rootPc + iv)%12));
   }
 
+  function wheelNoteFontSizeForLabel(label, isScaleTone){
+    const text = String(label || '');
+    const accidentalCount = (text.match(/[♯♭#bx]/g) || []).length;
+
+    if(text.includes('/')) return isScaleTone ? '17px' : '16px';
+    if(accidentalCount === 0 && text.length <= 2) return '40px';
+    if(accidentalCount === 1) return '32px';
+    if(accidentalCount === 2) return '27px';
+    if(accidentalCount === 3) return '22px';
+    return '19px';
+  }
+
+  function wheelFallbackNoteLabel(pc){
+    const mode = state.accidentalMode || 'natural';
+    if(mode === 'sharp') return pickSharpName(pc);
+    if(mode === 'flat') return pickFlatName(pc);
+    return pickNeutralName(pc);
+  }
+
+  function updateWheelNoteLabelsFromSpelling(){
+    try {
+      if(!notesRot) return;
+
+      const rels = Array.from(getSelectedIntervals()).sort((a,b)=>a-b);
+      const scaleMap = new Map();
+
+      let spelled = [];
+      try {
+        spelled = spellNotesForSet(state.rootIndex, rels);
+      } catch(err) {
+        spelled = [];
+      }
+
+      if(Array.isArray(spelled) && spelled[0] && spelled[0] !== 'Spelling unavailable'){
+        rels.forEach((iv, idx)=>{
+          const pc = ((state.rootIndex + iv) % 12 + 12) % 12;
+          const label = spelled[idx];
+          if(label && label !== 'Spelling unavailable') scaleMap.set(pc, label);
+        });
+      }
+
+      notesRot.querySelectorAll('text.note-label').forEach(t=>{
+        const pc = ((parseInt(t.dataset.idx, 10) || 0) % 12 + 12) % 12;
+
+        // Set notation on the wheel is always fixed pitch-class notation:
+        // C=0, C#/Db=1, D=2 ... B=11.
+        // It ignores root, scale membership, enharmonic spelling, and sharp/flat preference.
+        if (state.spellAsSet) {
+          const label = String(pc);
+
+          t.textContent = label;
+          t.setAttribute('font-size', '36px');
+          t.classList.toggle('spelled-scale-tone', false);
+          t.classList.toggle('spelled-chromatic-tone', false);
+          return;
+        }
+
+        const isScaleTone = scaleMap.has(pc);
+        const label = isScaleTone ? scaleMap.get(pc) : wheelFallbackNoteLabel(pc);
+
+        t.textContent = label;
+        t.setAttribute('font-size', wheelNoteFontSizeForLabel(label, isScaleTone));
+        t.classList.toggle('spelled-scale-tone', isScaleTone);
+        t.classList.toggle('spelled-chromatic-tone', !isScaleTone);
+      });
+    } catch(err) {
+      console.warn('[ModeWheel] note spelling display skipped:', err);
+    }
+  }
+
 // ---------- Scale Info Panel (desktop) ----------
   function intervalClassHistogram(pcs){
     const uniq = Array.from(new Set(pcs)).map(n=>((n%12)+12)%12).sort((a,b)=>a-b);
@@ -6552,8 +6696,14 @@ function playModeFromDegree(i) {
     return (intervals || []).map((iv, idx) => {
       const step = ((iv%12)+12)%12;
       const scaleDegreePosition = idx + 1;
-      if(step === 6 && scaleDegreePosition >= 5){
-        return mode === 'intervals' ? 'o5' : 'b5';
+      if(step === 6){
+        if(scaleDegreePosition === 4){
+          return mode === 'intervals' ? '+4' : '#4';
+        }
+        if(scaleDegreePosition === 5){
+          return mode === 'intervals' ? 'o5' : 'b5';
+        }
+        return 'Tt';
       }
       return source[step];
     });
@@ -6563,6 +6713,145 @@ function playModeFromDegree(i) {
     const mode = state.intervalDisplayMode || 'degrees';
     if(mode === 'steps') return (intervals || []).map(iv=>((iv%12)+12)%12);
     return intervalLabelsFromSpelling(spelled, intervals, mode);
+  }
+
+  function intervalRingDegreeLabel(step){
+    const s = ((step % 12) + 12) % 12;
+
+    // Default chromatic degree names.
+    // No split labels here: out-of-scale tones and non-enharmonic display should stay simple.
+    return ['1','b2','2','b3','3','4','#4','5','b6','6','b7','7'][s];
+  }
+
+  function intervalRingIntervalLabel(step){
+    const s = ((step % 12) + 12) % 12;
+
+    // Default chromatic interval names.
+    // No split labels here: out-of-scale tones and non-enharmonic display should stay simple.
+    return ['P1','m2','M2','m3','M3','P4','+4','P5','m6','M6','m7','M7'][s];
+  }
+
+  function updateIntervalRingLabels(){
+    try {
+      if(!outerBtnsG) return;
+
+      const labels = Array.from(outerBtnsG.querySelectorAll('text.interval-label'));
+      if(!labels.length) return;
+
+      const selected = getSelectedIntervals();
+      let spelled = [];
+      try {
+        const rels = Array.from(selected).sort((a,b)=>a-b);
+        spelled = spellNotesForSet(state.rootIndex, rels);
+      } catch(err) {
+        spelled = [];
+      }
+
+      let selectedLabelMap = new Map();
+
+      /*
+        Enharmonic-aware interval labels only apply to selected scale tones,
+        and only when Enharmonic is enabled.
+
+        The note-wheel "Set" toggle is intentionally ignored here:
+        Set controls note display only. The interval ring remains controlled by
+        Degrees / Intervals / Steps.
+      */
+      if(state.enharmonicSpelling && Array.isArray(spelled) && spelled[0] && spelled[0] !== 'Spelling unavailable'){
+        const rels = Array.from(selected).sort((a,b)=>a-b);
+        const selectedLabels = renderIntervalDisplay(spelled, rels);
+        rels.forEach((iv, idx)=>{
+          const ringLabel = String(selectedLabels[idx]) === 'Tt' ? 'Tritone' : selectedLabels[idx];
+          selectedLabelMap.set(((iv % 12) + 12) % 12, ringLabel);
+        });
+      }
+
+      labels.forEach(label=>{
+        const step = ((parseInt(label.dataset.idx, 10) || 0) % 12 + 12) % 12;
+        const mode = state.intervalDisplayMode || 'degrees';
+
+        let text;
+        if(mode === 'steps'){
+          text = String(step);
+
+        } else if(mode === 'degrees'){
+          // Degree mode: Root is always the anchor label, even if selectedLabelMap says "1".
+          if(step === 0){
+            text = 'Root';
+
+          } else if(selectedLabelMap.has(step)){
+            text = String(selectedLabelMap.get(step));
+
+          } else if(step === 6){
+            /*
+              Tritone context:
+              If the tritone is a selected scale tone, use the same contextual fallback
+              as the spelling panel even when Enharmonic is off:
+                - 4th scale position or earlier: #4
+                - 5th scale position or later: b5
+              If it is not a selected scale tone, call it Tritone.
+            */
+            const rels = Array.from(selected).sort((a,b)=>a-b);
+            const tritoneIdx = rels.indexOf(6);
+            const scalePosition = tritoneIdx + 1;
+
+            if(scalePosition === 4){
+              text = '#4';
+            } else if(scalePosition === 5){
+              text = 'b5';
+            } else {
+              text = 'Tritone';
+            }
+
+          } else {
+            text = intervalRingDegreeLabel(step);
+          }
+
+        } else if(mode === 'intervals'){
+          if(selectedLabelMap.has(step)){
+            text = String(selectedLabelMap.get(step));
+
+          } else if(step === 6){
+            /*
+              Tritone context:
+              If selected, use +4/o5 by scale-degree position even when Enharmonic is off.
+              If unselected, use the neutral concept label.
+            */
+            const rels = Array.from(selected).sort((a,b)=>a-b);
+            const tritoneIdx = rels.indexOf(6);
+            const scalePosition = tritoneIdx + 1;
+
+            if(scalePosition === 4){
+              text = '+4';
+            } else if(scalePosition === 5){
+              text = 'o5';
+            } else {
+              text = 'Tritone';
+            }
+
+          } else {
+            text = intervalRingIntervalLabel(step);
+          }
+
+        } else {
+          text = intervalRingDegreeLabel(step);
+        }
+
+        label.textContent = text;
+
+        // Longer split labels need to shrink to keep the ring clean.
+        const len = String(text).length;
+        const fontSize =
+          len <= 2 ? '15px' :
+          len <= 4 ? '12px' :
+          len <= 6 ? '10px' :
+          '8.5px';
+
+        label.setAttribute('font-size', fontSize);
+      });
+    } catch(err) {
+      console.warn('[ModeWheel] interval ring label sync skipped:', err);
+    }
   }
 
   function updateScaleInfoPanel(){
@@ -6624,6 +6913,14 @@ function playModeFromDegree(i) {
     if (typeof updateModeTileDesktopLabels === 'function') {
       updateModeTileDesktopLabels(getSelectedIntervals());
     }
+
+    // Safely sync the note-wheel labels and interval ring to the current spelling settings.
+    if (typeof updateWheelNoteLabelsFromSpelling === 'function') {
+      updateWheelNoteLabelsFromSpelling();
+    }
+    if (typeof updateIntervalRingLabels === 'function') {
+      updateIntervalRingLabels();
+    }
   }
 
 
@@ -6659,6 +6956,9 @@ function playModeFromDegree(i) {
     notesRot.setAttribute('transform', `rotate(${state.noteRot})`);
     updateNoteLabelOrientation();
     updateKeyDisplay();
+    if (typeof updateWheelNoteLabelsFromSpelling === 'function') {
+      updateWheelNoteLabelsFromSpelling();
+    }
 
     // keep index panel synced to the currently visible mode (adds key digit)
     if(typeof reflectIndexUIFromCurrentSelection === 'function'){
@@ -7194,3 +7494,428 @@ function roman(n){
   window.addEventListener("load", setup);
   window.addEventListener("resize", setup);
 })();
+
+
+/* === MOBILE PORTRAIT: options gear + spelling popup v3 === */
+function ensureMobileOptionsButton() {
+  const indexBubble = document.querySelector('.index-bubble');
+  const indexRow = indexBubble ? indexBubble.querySelector('.index-inline-row') : null;
+  const panel = document.getElementById('scale-info-panel');
+  const leftControlStack = document.getElementById('left-control-stack');
+
+  if (!indexRow || !panel) return;
+
+  let optionsButton = document.getElementById('mobile-options-button');
+  if (!optionsButton) {
+    optionsButton = document.createElement('button');
+    optionsButton.id = 'mobile-options-button';
+    optionsButton.type = 'button';
+    optionsButton.setAttribute('aria-label', 'Options');
+    optionsButton.setAttribute('aria-expanded', 'false');
+    optionsButton.textContent = '⚙';
+  }
+  if (optionsButton.parentElement !== indexRow) indexRow.appendChild(optionsButton);
+
+  let closeButton = document.getElementById('mobile-options-close');
+  if (!closeButton) {
+    closeButton = document.createElement('button');
+    closeButton.id = 'mobile-options-close';
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Close options');
+    closeButton.textContent = '×';
+  }
+  if (closeButton.parentElement !== panel) panel.insertBefore(closeButton, panel.firstChild);
+
+  function movePanelToBodyForMobile() {
+    if (window.innerWidth < 900 && panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+  }
+
+  function restorePanelForDesktop() {
+    if (window.innerWidth >= 900 && leftControlStack && panel.parentElement !== leftControlStack) {
+      leftControlStack.insertBefore(panel, leftControlStack.firstChild);
+    }
+  }
+
+  function openMobileOptions() {
+    if (window.innerWidth >= 900) return;
+    movePanelToBodyForMobile();
+
+    const sipBody = document.getElementById('sip-body');
+    const sipToggle = document.getElementById('sip-toggle');
+    if (sipBody) sipBody.removeAttribute('hidden');
+    if (sipToggle) {
+      sipToggle.textContent = '−';
+      sipToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    document.body.classList.add('mobile-options-open');
+    optionsButton.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMobileOptions() {
+    document.body.classList.remove('mobile-options-open');
+    optionsButton.setAttribute('aria-expanded', 'false');
+  }
+
+  if (!optionsButton.dataset.mobileOptionsWired) {
+    optionsButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.body.classList.contains('mobile-options-open') ? closeMobileOptions() : openMobileOptions();
+    });
+    optionsButton.dataset.mobileOptionsWired = '1';
+  }
+
+  if (!closeButton.dataset.mobileOptionsWired) {
+    closeButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMobileOptions();
+    });
+    closeButton.dataset.mobileOptionsWired = '1';
+  }
+
+  if (!document.body.dataset.mobileOptionsDismissWired) {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMobileOptions();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!document.body.classList.contains('mobile-options-open')) return;
+      if (panel.contains(e.target) || optionsButton.contains(e.target)) return;
+      closeMobileOptions();
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) {
+        closeMobileOptions();
+        restorePanelForDesktop();
+      } else {
+        setTimeout(ensureMobileOptionsButton, 0);
+      }
+    });
+
+    document.body.dataset.mobileOptionsDismissWired = '1';
+  }
+}
+
+ensureMobileOptionsButton();
+setTimeout(ensureMobileOptionsButton, 0);
+window.addEventListener('load', ensureMobileOptionsButton);
+
+
+/* === MOBILE PORTRAIT: place index/reset below mode controls === */
+function placeIndexForMobile() {
+  const modeControls = document.getElementById('mode-controls');
+  const indexBubble = document.querySelector('.index-bubble');
+  const leftControlStack = document.getElementById('left-control-stack');
+
+  if (!modeControls || !indexBubble) return;
+
+  if (window.innerWidth < 900) {
+    modeControls.insertAdjacentElement('afterend', indexBubble);
+    indexBubble.style.display = 'block';
+    indexBubble.style.visibility = 'visible';
+    indexBubble.style.opacity = '1';
+    indexBubble.style.pointerEvents = 'auto';
+  } else {
+    if (leftControlStack && indexBubble.parentElement !== leftControlStack) {
+      leftControlStack.appendChild(indexBubble);
+    }
+    indexBubble.style.display = '';
+    indexBubble.style.visibility = '';
+    indexBubble.style.opacity = '';
+    indexBubble.style.pointerEvents = '';
+  }
+}
+
+placeIndexForMobile();
+window.addEventListener('resize', placeIndexForMobile);
+
+
+
+
+/* === MOBILE ROW FINALIZER: restore index/reset/options and click === */
+(function mobileRowFinalizer() {
+  function placeIndexForMobileFinal() {
+    const modeControls = document.getElementById('mode-controls');
+    const indexBubble = document.querySelector('.index-bubble');
+    const leftControlStack = document.getElementById('left-control-stack');
+
+    if (!modeControls || !indexBubble) return;
+
+    if (window.innerWidth < 900) {
+      if (modeControls.nextElementSibling !== indexBubble) {
+        modeControls.insertAdjacentElement('afterend', indexBubble);
+      }
+      indexBubble.style.display = 'block';
+      indexBubble.style.visibility = 'visible';
+      indexBubble.style.opacity = '1';
+      indexBubble.style.pointerEvents = 'auto';
+    } else if (leftControlStack && indexBubble.parentElement !== leftControlStack) {
+      leftControlStack.appendChild(indexBubble);
+      indexBubble.style.display = '';
+      indexBubble.style.visibility = '';
+      indexBubble.style.opacity = '';
+      indexBubble.style.pointerEvents = '';
+    }
+  }
+
+  function ensureGearFinal() {
+    const indexRow = document.querySelector('.index-bubble .index-inline-row');
+    const panel = document.getElementById('scale-info-panel');
+    if (!indexRow || !panel) return;
+
+    let gear = document.getElementById('mobile-options-button');
+    if (!gear) {
+      gear = document.createElement('button');
+      gear.id = 'mobile-options-button';
+      gear.type = 'button';
+      gear.setAttribute('aria-label', 'Options');
+      gear.textContent = '⚙';
+    }
+    if (gear.parentElement !== indexRow) indexRow.appendChild(gear);
+
+    let close = document.getElementById('mobile-options-close');
+    if (!close) {
+      close = document.createElement('button');
+      close.id = 'mobile-options-close';
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Close options');
+      close.textContent = '×';
+    }
+    if (close.parentElement !== panel) panel.insertBefore(close, panel.firstChild);
+
+    function open() {
+      if (window.innerWidth >= 900) return;
+      if (panel.parentElement !== document.body) document.body.appendChild(panel);
+
+      const sipBody = document.getElementById('sip-body');
+      const sipToggle = document.getElementById('sip-toggle');
+      if (sipBody) sipBody.removeAttribute('hidden');
+      if (sipToggle) {
+        sipToggle.textContent = '−';
+        sipToggle.setAttribute('aria-expanded', 'true');
+      }
+
+      document.body.classList.add('mobile-options-open');
+      gear.setAttribute('aria-expanded', 'true');
+    }
+
+    function closePopup() {
+      document.body.classList.remove('mobile-options-open');
+      gear.setAttribute('aria-expanded', 'false');
+    }
+
+    if (!gear.dataset.finalWired) {
+      gear.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.contains('mobile-options-open') ? closePopup() : open();
+      });
+      gear.dataset.finalWired = '1';
+    }
+
+    if (!close.dataset.finalWired) {
+      close.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closePopup();
+      });
+      close.dataset.finalWired = '1';
+    }
+
+    if (!document.body.dataset.finalOptionsDismissWired) {
+      document.addEventListener('click', (e) => {
+        if (!document.body.classList.contains('mobile-options-open')) return;
+        const currentPanel = document.getElementById('scale-info-panel');
+        const currentGear = document.getElementById('mobile-options-button');
+        if ((currentPanel && currentPanel.contains(e.target)) || (currentGear && currentGear.contains(e.target))) return;
+        closePopup();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePopup();
+      });
+
+      document.body.dataset.finalOptionsDismissWired = '1';
+    }
+  }
+
+  function runFinalizer() {
+    placeIndexForMobileFinal();
+    ensureGearFinal();
+  }
+
+  runFinalizer();
+  setTimeout(runFinalizer, 0);
+  setTimeout(runFinalizer, 100);
+  window.addEventListener('load', runFinalizer);
+  window.addEventListener('resize', runFinalizer);
+})();
+
+
+/* === MOBILE OPTIONS: final delegated click opener === */
+/*
+  Final mobile-only repair:
+  The row and gear are already visible. This delegated capture-phase handler
+  makes the existing gear open the spelling/options popup reliably, even if
+  earlier handlers were attached before the button moved or got replaced.
+*/
+(function mobileOptionsFinalDelegatedClick() {
+  function getPanel() {
+    return document.getElementById('scale-info-panel');
+  }
+
+  function getGear() {
+    return document.getElementById('mobile-options-button');
+  }
+
+  function ensureCloseButton(panel) {
+    let close = document.getElementById('mobile-options-close');
+    if (!close) {
+      close = document.createElement('button');
+      close.id = 'mobile-options-close';
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Close options');
+      close.textContent = '×';
+    }
+    if (panel && close.parentElement !== panel) {
+      panel.insertBefore(close, panel.firstChild);
+    }
+    return close;
+  }
+
+  function openMobileOptionsPanel() {
+    if (window.innerWidth >= 900) return;
+
+    const panel = getPanel();
+    const gear = getGear();
+    if (!panel) return;
+
+    // Move out of hidden desktop stacks before showing as a fixed mobile popup.
+    if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+
+    ensureCloseButton(panel);
+
+    const sipBody = document.getElementById('sip-body');
+    const sipToggle = document.getElementById('sip-toggle');
+    if (sipBody) sipBody.removeAttribute('hidden');
+    if (sipToggle) {
+      sipToggle.textContent = '−';
+      sipToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    document.body.classList.add('mobile-options-open');
+    if (gear) gear.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMobileOptionsPanel() {
+    const gear = getGear();
+    document.body.classList.remove('mobile-options-open');
+    if (gear) gear.setAttribute('aria-expanded', 'false');
+  }
+
+  document.addEventListener('click', function(e) {
+    const gear = e.target && e.target.closest ? e.target.closest('#mobile-options-button') : null;
+    if (!gear) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (document.body.classList.contains('mobile-options-open')) {
+      closeMobileOptionsPanel();
+    } else {
+      openMobileOptionsPanel();
+    }
+  }, true);
+
+  document.addEventListener('click', function(e) {
+    const close = e.target && e.target.closest ? e.target.closest('#mobile-options-close') : null;
+    if (!close) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    closeMobileOptionsPanel();
+  }, true);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeMobileOptionsPanel();
+  });
+
+  window.addEventListener('resize', function() {
+    if (window.innerWidth >= 900) {
+      closeMobileOptionsPanel();
+      const panel = getPanel();
+      const stack = document.getElementById('left-control-stack');
+      if (panel && stack && panel.parentElement !== stack) {
+        stack.insertBefore(panel, stack.firstChild);
+      }
+    }
+  });
+})();
+
+
+/* === MOBILE OPTIONS CLEANUP FINAL: remove legacy popup contents after open === */
+/*
+  This intentionally does not touch the gear button or its click handler.
+  It only cleans contents inside #scale-info-panel after the mobile popup opens.
+*/
+(function mobileOptionsPopupContentCleanupFinal() {
+  function cleanPanel() {
+    if (!document.body.classList.contains('mobile-options-open')) return;
+
+    const panel = document.getElementById('scale-info-panel');
+    if (!panel) return;
+
+    // Hide old key/mode title controls if present.
+    [
+      '#sip-key-control',
+      '#sip-mode-control',
+      '.sip-title-control',
+      '.sip-title-arrow',
+      '.sip-title-value',
+      '.sip-key-mode-row',
+      '.sip-key-row',
+      '.sip-mode-row'
+    ].forEach(selector => {
+      panel.querySelectorAll(selector).forEach(el => {
+        el.style.display = 'none';
+        el.style.visibility = 'hidden';
+        el.style.pointerEvents = 'none';
+      });
+    });
+
+    // Hide histogram material by structure and by exact visible label text.
+    [
+      '#sip-hist',
+      '.sip-hist'
+    ].forEach(selector => {
+      panel.querySelectorAll(selector).forEach(el => {
+        el.style.display = 'none';
+      });
+    });
+
+    panel.querySelectorAll('*').forEach(el => {
+      const text = (el.textContent || '').trim().toLowerCase();
+      if (text === 'interval-class histogram' || text === 'interval class histogram') {
+        el.style.display = 'none';
+        const parent = el.closest('.sip-section') || el.parentElement;
+        if (parent && parent !== panel) parent.style.display = 'none';
+      }
+    });
+  }
+
+  // Clean immediately after any click that opens the menu.
+  document.addEventListener('click', () => {
+    setTimeout(cleanPanel, 0);
+    setTimeout(cleanPanel, 60);
+  }, true);
+
+  window.addEventListener('load', cleanPanel);
+})();
+
